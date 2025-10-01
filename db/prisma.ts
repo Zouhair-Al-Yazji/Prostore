@@ -5,6 +5,7 @@ const globalForPrisma = global as unknown as {
   prisma: ReturnType<typeof createExtendedPrismaClient> | undefined;
 };
 
+// Function to create the extended client
 function createExtendedPrismaClient() {
   const basePrisma = new PrismaClient().$extends({
     result: {
