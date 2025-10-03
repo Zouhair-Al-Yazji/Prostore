@@ -9,6 +9,7 @@ export default function ProductPrice({
 }) {
   const stringValue = value.toFixed(2);
   const [intValue, floatValue] = stringValue.split(".");
+  
   return (
     <p className={cn("text-2xl", className)}>
       <span className="align-super text-xs">$</span>
