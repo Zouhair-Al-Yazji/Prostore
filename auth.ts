@@ -4,23 +4,23 @@ import prisma from '@/db/prisma'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { compareSync } from 'bcrypt-ts-edge';
 
-export const config: NextAuthConfig = {
+export const config = {
   pages: {
     signIn: '/sign-in',
     error: '/error'
   },
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60,
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   adapter: PrismaAdapter(prisma),
   providers: [ 
     CredentialsProvider({
       credentials: {
         email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" },
       },
-      async authorize(credentials, req) {
+      async authorize(credentials) {
         if (!credentials) return null;
 
         // Find user in database
@@ -49,7 +49,20 @@ export const config: NextAuthConfig = {
         return null;
       }
     })
-  ]
-};
+  ],
+  callbacks: {
+    async session({session, token, user, trigger}: any) {
+      // Set the user ID from the token
+      session.user.id = token.sub;
+
+      // if there an update, set the user name
+      if (trigger=== 'update') {
+        session.user.name = user.name;
+      }
+
+      return session;
+    }
+  }
+} satisfies  NextAuthConfig;
 
 export const {handlers, auth, signIn, signOut} = NextAuth(config);
