@@ -5,14 +5,14 @@ import { signInFormSchema } from "../validators";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 
 // Sign in the user with credentials
-export function SignInWithCredentials(prevState: unknown, formData: FormData) {
+export async function SignInWithCredentials(prevState: unknown, formData: FormData) {
   try {
     const user = signInFormSchema.parse({
       email: formData.get('email'),
       password: formData.get('password'),
     })
   
-    signIn('credentials', user)
+    await signIn('credentials', user)
 
     return {success: true, message: 'Signed in successfully'}
   } catch (error) {
@@ -20,7 +20,7 @@ export function SignInWithCredentials(prevState: unknown, formData: FormData) {
       throw error;
     }
 
-    return {success: false, message: 'Invalid email or password'}   
+    return {success: false, message: 'Invalid email or password'}
   }
 }
 
