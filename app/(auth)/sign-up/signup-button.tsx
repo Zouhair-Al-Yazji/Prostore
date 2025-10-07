@@ -4,17 +4,17 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useFormStatus } from 'react-dom';
 
-export default function SignInButton() {
+export default function SignUpButton() {
 	const { pending } = useFormStatus();
 
 	return (
 		<Button disabled={pending}>
 			{pending ? (
 				<>
-					<Spinner /> Signing In
+					<Spinner /> Submitting
 				</>
 			) : (
-				'Sign In'
+				'Sign Up'
 			)}
 		</Button>
 	);

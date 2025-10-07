@@ -19,7 +19,7 @@ export async function getLatestProducts(): Promise<Product[]> {
 export async function getProductBySlug(slug: string) {
 	return await prisma.product.findFirst({
 		where: {
-			slug: slug
-		}
-	})
+			slug: slug,
+		},
+	});
 }
