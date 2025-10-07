@@ -44,7 +44,7 @@ export default function SignUpForm() {
 								id="name"
 								name="name"
 								placeholder="Zouhair elyazji"
-								// required
+								required
 							/>
 						</InputGroup>
 					</Field>
