@@ -19,7 +19,7 @@ export default function AddToCart({ item }: { item: CartItem }) {
 		}
 
 		// Handle success add to cart
-		toast(`${item.name} added to cart`, {
+		toast(`${item.name} ${res.message}`, {
 			action: {
 				label: 'Go To Cart',
 				onClick: () => router.push('/cart'),
