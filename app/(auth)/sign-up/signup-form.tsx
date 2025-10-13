@@ -16,10 +16,11 @@ import { LockIcon, MailIcon, User } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useActionState } from 'react';
-import SignUpButton from './signup-button';
+import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 
 export default function SignUpForm() {
-	const [data, action] = useActionState(SignUpUser, {
+	const [data, action, isPending] = useActionState(SignUpUser, {
 		success: false,
 		message: '',
 	});
@@ -43,7 +44,8 @@ export default function SignUpForm() {
 								defaultValue={signUpDefaultValues.name}
 								id="name"
 								name="name"
-								placeholder="Zouhair elyazji"
+								disabled={isPending}
+								placeholder="Enter full name"
 								required
 							/>
 						</InputGroup>
@@ -59,6 +61,7 @@ export default function SignUpForm() {
 								defaultValue={signUpDefaultValues.email}
 								id="email"
 								name="email"
+								disabled={isPending}
 								placeholder="john@email.com"
 								required
 							/>
@@ -75,6 +78,7 @@ export default function SignUpForm() {
 								type="password"
 								id="password"
 								placeholder="******"
+								disabled={isPending}
 								name="password"
 								required
 							/>
@@ -92,12 +96,21 @@ export default function SignUpForm() {
 								id="confirmPassword"
 								placeholder="******"
 								name="confirmPassword"
+								disabled={isPending}
 								required
 							/>
 						</InputGroup>
 					</Field>
 					<Field>
-						<SignUpButton />
+						<Button disabled={isPending}>
+							{isPending ? (
+								<>
+									<Spinner className="h-4 w-4" /> Submitting
+								</>
+							) : (
+								'Sign Up'
+							)}
+						</Button>
 					</Field>
 
 					{data.message && !data.success && (

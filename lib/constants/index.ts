@@ -1,3 +1,5 @@
+import { ShippingAddress } from '@/types';
+
 export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'Prostore';
 export const APP_DESCRIPTION =
 	process.env.NEXT_PUBLIC_APP_DESCRIPTION || 'a modern eCommerce built with next.js';
@@ -14,4 +16,12 @@ export const signUpDefaultValues = {
 	email: '',
 	password: '',
 	confirmPassword: '',
+};
+
+export const shippingAddressDefaultValues: ShippingAddress = {
+	fullName: 'John doe',
+	streetAddress: '123 main st',
+	city: 'Gaza',
+	country: 'Palestine',
+	postalCode: '1234',
 };

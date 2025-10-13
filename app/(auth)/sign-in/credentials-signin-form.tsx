@@ -14,12 +14,13 @@ import { signInDefaultValues } from '@/lib/constants';
 import { LockIcon, MailIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useActionState } from 'react';
-import SignInButton from './signin-button';
 import { useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 
 export default function CredentialsSignInForm() {
-	const [data, action] = useActionState(SignInWithCredentials, {
+	const [data, action, isPending] = useActionState(SignInWithCredentials, {
 		success: false,
 		message: '',
 	});
@@ -42,6 +43,7 @@ export default function CredentialsSignInForm() {
 								type="email"
 								defaultValue={signInDefaultValues.email}
 								id="email"
+								disabled={isPending}
 								name="email"
 								placeholder="john@email.com"
 								required
@@ -58,6 +60,7 @@ export default function CredentialsSignInForm() {
 								defaultValue={signInDefaultValues.password}
 								type="password"
 								id="password"
+								disabled={isPending}
 								placeholder="******"
 								name="password"
 								required
@@ -65,7 +68,15 @@ export default function CredentialsSignInForm() {
 						</InputGroup>
 					</Field>
 					<Field>
-						<SignInButton />
+						<Button disabled={isPending}>
+							{isPending ? (
+								<>
+									<Spinner className="h-4 w-4" /> Signing In
+								</>
+							) : (
+								'Sign In'
+							)}
+						</Button>
 					</Field>
 
 					{data.message && !data.success && (
