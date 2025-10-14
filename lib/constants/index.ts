@@ -19,9 +19,9 @@ export const signUpDefaultValues = {
 };
 
 export const shippingAddressDefaultValues: ShippingAddress = {
-	fullName: 'John doe',
-	streetAddress: '123 main st',
-	city: 'Gaza',
-	country: 'Palestine',
-	postalCode: '1234',
+	fullName: '',
+	streetAddress: '',
+	city: '',
+	country: '',
+	postalCode: '',
 };

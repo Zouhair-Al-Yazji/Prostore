@@ -12,6 +12,7 @@ import {
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
+import { updateUserAction } from '@/lib/actions/user.actions';
 import { shippingAddressDefaultValues } from '@/lib/constants';
 import { shippingAddressSchema } from '@/lib/validators';
 import type { ShippingAddress } from '@/types';
@@ -31,12 +32,14 @@ export default function ShippingAddressForm({ address }: { address: ShippingAddr
 	});
 
 	function onSubmit(data: ShippingAddress) {
-		toast('You submitted the following values:', {
-			description: (
-				<pre className="bg-code text-code-foreground mt-2 w-[320px] overflow-x-auto rounded-md p-4">
-					<code>{JSON.stringify(data, null, 2)}</code>
-				</pre>
-			),
+		startTransition(async () => {
+			const res = await updateUserAction(data);
+			if (!res.success) {
+				toast.error(res.message);
+				return;
+			}
+
+			router.push('/payment-method');
 		});
 	}
 
@@ -62,6 +65,7 @@ export default function ShippingAddressForm({ address }: { address: ShippingAddr
 										id="fullName"
 										aria-invalid={fieldState.invalid}
 										placeholder="Enter full name"
+										disabled={isPending}
 									/>
 									{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 								</Field>
@@ -80,6 +84,7 @@ export default function ShippingAddressForm({ address }: { address: ShippingAddr
 										id="country"
 										aria-invalid={fieldState.invalid}
 										placeholder="Enter country"
+										disabled={isPending}
 									/>
 									{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 								</Field>
@@ -98,6 +103,7 @@ export default function ShippingAddressForm({ address }: { address: ShippingAddr
 										id="city"
 										aria-invalid={fieldState.invalid}
 										placeholder="Enter city"
+										disabled={isPending}
 									/>
 									{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 								</Field>
@@ -116,6 +122,7 @@ export default function ShippingAddressForm({ address }: { address: ShippingAddr
 										id="streetAddress"
 										aria-invalid={fieldState.invalid}
 										placeholder="Enter address"
+										disabled={isPending}
 									/>
 									{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 								</Field>
@@ -134,6 +141,7 @@ export default function ShippingAddressForm({ address }: { address: ShippingAddr
 										id="postalCode"
 										aria-invalid={fieldState.invalid}
 										placeholder="Enter postal code"
+										disabled={isPending}
 									/>
 									{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 								</Field>
