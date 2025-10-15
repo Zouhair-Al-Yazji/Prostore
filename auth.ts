@@ -1,10 +1,6 @@
 import NextAuth, { type NextAuthConfig } from 'next-auth';
-import { PrismaAdapter } from '@auth/prisma-adapter';
-import prisma from '@/db/prisma';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { compareSync } from 'bcrypt-ts-edge';
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 
 export const config = {
 	pages: {
@@ -15,7 +11,6 @@ export const config = {
 		strategy: 'jwt',
 		maxAge: 30 * 24 * 60 * 60, // 30 days
 	},
-	adapter: PrismaAdapter(prisma),
 	providers: [
 		CredentialsProvider({
 			credentials: {
@@ -25,96 +20,54 @@ export const config = {
 			async authorize(credentials) {
 				if (!credentials) return null;
 
-				// Find user in database
-				const user = await prisma.user.findFirst({
-					where: {
-						email: credentials.email as string,
+				// Call your new API route
+				const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/auth/login`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
 					},
+					body: JSON.stringify({
+						email: credentials.email,
+						password: credentials.password,
+					}),
 				});
 
-				// Check if the user exist and if the password matches
-				if (user && user.password) {
-					const isMatch = compareSync(credentials.password as string, user.password);
-
-					// If password is correct return user
-					if (isMatch) {
-						return {
-							id: user.id,
-							name: user.name,
-							email: user.email,
-							role: user.role,
-						};
-					}
+				if (!res.ok) {
+					return null; // The API returned an error (e.g., 401 Unauthorized)
 				}
 
-				// If user does not exist or password does not match return null
-				return null;
+				const user = await res.json();
+
+				// If the API returns a user object, authentication was successful
+				if (user) {
+					return user;
+				} else {
+					return null;
+				}
 			},
 		}),
 	],
 	callbacks: {
-		async session({ session, token, user, trigger }: any) {
-			// Set the user ID from the token
-			session.user.id = token.sub;
-			session.user.role = token.role;
-			session.user.name = token.name;
-
-			// if there an update, set the user name
-			if (trigger === 'update') session.user.name = user.name;
-
+		// The session callback gets data from the JWT token
+		async session({ session, token }: any) {
+			if (token.sub && session.user) {
+				session.user.id = token.sub;
+				session.user.role = token.role as string; // Cast role to its type
+			}
 			return session;
 		},
-		async jwt({ session, token, user, trigger }: any) {
-			// Assign user field to token
+		// The JWT callback is called first, to create/update the token
+		async jwt({ token, user }: any) {
 			if (user) {
-				token.id = user.id;
+				// The user object comes from the `authorize` function
+				token.sub = user.id;
 				token.role = user.role;
-
-				// If user has no name then use the email
-				if (user.name === 'NO_NAME') {
-					token.name = user.email?.split('@')[0];
-
-					// Update database to reflect the token name
-					await prisma.user.update({
-						where: { id: user.id },
-						data: { name: token.name },
-					});
-				}
-
-				if (trigger === 'signIn' || trigger === 'signUp') {
-					const cookiesObject = await cookies();
-					const sessionCartId = cookiesObject.get('sessionCartId')?.value;
-
-					if (sessionCartId) {
-						const sessionCart = await prisma.cart.findFirst({
-							where: { sessionCartId },
-						});
-
-						if (sessionCart) {
-							// Delete current user cart
-							await prisma.cart.deleteMany({
-								where: { userId: user.id },
-							});
-
-							// Assign new cart
-							await prisma.cart.update({
-								where: { id: sessionCart.id },
-								data: { userId: user.id },
-							});
-						}
-					}
-				}
 			}
-
-			// Handle session update
-			if (session?.user.name && trigger === 'update') {
-				token.name = session.user.name;
-			}
-
 			return token;
 		},
+
+		// This authorized callback is fine as it doesn't use Prisma
 		async authorized({ request, auth }) {
-			// Array of regex patterns of paths we want to protect
 			const protectedPaths = [
 				/\/shipping-address/,
 				/\/payment-method/,
@@ -124,35 +77,21 @@ export const config = {
 				/\/order\/(.*)/,
 				/\/admin/,
 			];
-
-			// Get pathname from the req URL object
 			const { pathname } = request.nextUrl;
 
-			// Check if user is not authenticated and accessing a protected path
-			if (!auth && protectedPaths.some(path => path.test(pathname))) return false;
-
-			if (!request.cookies.get('sessionCartId')) {
-				// Check for session cart cookie
-				// Generate new session cart id cookie
-				const sessionCartId = crypto.randomUUID();
-
-				// Clone the req headers
-				const newRequestHeaders = new Headers(request.headers);
-
-				// Create new response and add the new headers
-				const response = NextResponse.next({
-					request: {
-						headers: newRequestHeaders,
-					},
-				});
-
-				// Set newly generated sessionCartId in the response cookie
-				response.cookies.set('sessionCartId', sessionCartId);
-
-				return response;
-			} else {
-				return true;
+			if (!auth && protectedPaths.some(path => path.test(pathname))) {
+				return false;
 			}
+
+			// Logic for sessionCartId is fine to keep here
+			if (!request.cookies.get('sessionCartId')) {
+				const sessionCartId = crypto.randomUUID();
+				const response = NextResponse.next();
+				response.cookies.set('sessionCartId', sessionCartId);
+				return response;
+			}
+
+			return true;
 		},
 	},
 } satisfies NextAuthConfig;
