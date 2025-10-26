@@ -46,7 +46,7 @@ export default function ShippingAddressForm({ address }: { address: ShippingAddr
 	return (
 		<Card className="w-full sm:max-w-md sm:mx-auto">
 			<CardHeader>
-				<CardTitle>Shipping address</CardTitle>
+				<CardTitle>Shipping Address</CardTitle>
 				<CardDescription>Please enter an address to ship to.</CardDescription>
 			</CardHeader>
 			<CardContent>

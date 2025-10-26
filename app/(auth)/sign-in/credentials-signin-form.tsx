@@ -46,6 +46,7 @@ export default function CredentialsSignInForm() {
 								disabled={isPending}
 								name="email"
 								placeholder="john@email.com"
+								autoComplete="email"
 								required
 							/>
 						</InputGroup>
@@ -62,6 +63,7 @@ export default function CredentialsSignInForm() {
 								id="password"
 								disabled={isPending}
 								placeholder="******"
+								autoComplete={'current-password'}
 								name="password"
 								required
 							/>

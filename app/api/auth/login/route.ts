@@ -21,7 +21,7 @@ export async function POST(req: Request) {
 			const isMatch = compareSync(password, user.password);
 
 			if (isMatch) {
-				// This is where you can move your cart-merging logic from the JWT callback
+				// Handle cart merging logic
 				const cookiesObject = await cookies();
 				const sessionCartId = cookiesObject.get('sessionCartId')?.value;
 
@@ -36,7 +36,10 @@ export async function POST(req: Request) {
 						// Assign the session cart to the logged-in user
 						await prisma.cart.update({
 							where: { id: sessionCart.id },
-							data: { userId: user.id }, // Clear the sessionCartId
+							data: {
+								userId: user.id,
+								sessionCartId,
+							},
 						});
 					}
 				}
@@ -51,10 +54,8 @@ export async function POST(req: Request) {
 			}
 		}
 
-		// If user not found or password incorrect
 		return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
 	} catch (error) {
-		console.error('Login API Error:', error);
 		return NextResponse.json({ error: 'An internal server error occurred' }, { status: 500 });
 	}
 }
