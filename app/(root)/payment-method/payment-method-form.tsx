@@ -1,12 +1,6 @@
 'use client';
 
-import { DEFAULT_PAYMENT_METHOD, PAYMENT_METHODS } from '@/lib/constants';
-import { PaymentMethod } from '@/types';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'next/navigation';
-import { useTransition } from 'react';
-import { Controller, useForm } from 'react-hook-form';
-import { paymentMethodSchema } from '../../../lib/validators';
+import { Button } from '@/components/ui/button';
 import {
 	Card,
 	CardContent,
@@ -24,13 +18,18 @@ import {
 	FieldSet,
 	FieldTitle,
 } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
-import { ArrowRight } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Spinner } from '@/components/ui/spinner';
 import { updateUserPaymentMethod } from '@/lib/actions/user.actions';
+import { DEFAULT_PAYMENT_METHOD, PAYMENT_METHODS } from '@/lib/constants';
+import { PaymentMethod } from '@/types';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { ArrowRight } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useTransition } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+import { paymentMethodSchema } from '@/lib/validators';
 
 export default function PaymentMethodForm({
 	preferredPaymentMethod,
