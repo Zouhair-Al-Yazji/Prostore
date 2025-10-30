@@ -1,7 +1,7 @@
 const base = process.env.PAYPAL_API_URL || 'https://api-m.sandbox.paypal.com';
 
 export const paypal = {
-	createOrder: async function (price: number) {
+	createOrder: async function createOrder(price: number) {
 		const accessToken = await generateAccessToken();
 		const url = `${base}/v2/checkout/orders`;
 
@@ -24,8 +24,7 @@ export const paypal = {
 			}),
 		});
 
-		const jsonData = await handleResponse(response);
-		return jsonData.access_token;
+		return handleResponse(response);
 	},
 	capturePayment: async function capturePayment(orderId: string) {
 		const accessToken = await generateAccessToken();
@@ -46,7 +45,6 @@ export const paypal = {
 // Generate paypal access token
 async function generateAccessToken() {
 	const { PAYPAL_CLIENT_ID, PAYPAL_APP_SECRET } = process.env;
-
 	const auth = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_APP_SECRET}`).toString('base64');
 
 	const response = await fetch(`${base}/v1/oauth2/token`, {
@@ -58,15 +56,16 @@ async function generateAccessToken() {
 		},
 	});
 
-	return handleResponse(response);
+	const jsonData = await handleResponse(response);
+	return jsonData.access_token;
 }
 
 async function handleResponse(response: Response) {
 	if (response.ok) {
 		return response.json();
 	} else {
-		const errMessage = await response.text();
-		throw new Error(errMessage);
+		const errorMessage = await response.text();
+		throw new Error(errorMessage);
 	}
 }
 
