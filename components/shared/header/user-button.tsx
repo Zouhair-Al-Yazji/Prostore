@@ -9,7 +9,7 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SignOutUser } from '@/lib/actions/user.actions';
-import { UserIcon } from 'lucide-react';
+import { UserIcon, History, LogOut } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function UserButton() {
@@ -47,10 +47,24 @@ export default async function UserButton() {
 						</div>
 					</DropdownMenuLabel>
 					<DropdownMenuSeparator />
+					<DropdownMenuItem>
+						<Link href="user/profile" className="w-full flex items-center gap-2">
+							<UserIcon /> <span>User Profile</span>
+						</Link>
+					</DropdownMenuItem>
+					<DropdownMenuItem>
+						<Link href="user/orders" className="w-full flex items-center gap-2">
+							<History />
+							<span>Order History</span>
+						</Link>
+					</DropdownMenuItem>
 					<DropdownMenuItem className="p-0 mb-1">
 						<form action={SignOutUser} className="w-full">
-							<Button className="w-full px-2 justify-start py-4 h-4" variant={'ghost'}>
-								Sign Out
+							<Button
+								className="w-full flex items-center gap-2 justify-start py-4 h-4"
+								variant="ghost"
+							>
+								<LogOut /> <span>Sign Out</span>
 							</Button>
 						</form>
 					</DropdownMenuItem>
