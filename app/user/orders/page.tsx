@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/table';
 import { getMyOrders } from '@/lib/actions/order.actions';
 import { formatCurrency, formatDateTime, formatId } from '@/lib/utils';
+import { ExternalLink } from 'lucide-react';
 import { Metadata } from 'next';
 import Link from 'next/link';
 
@@ -29,7 +30,7 @@ export default async function OrdersPage({
 	return (
 		<div className="space-y-2">
 			<h2 className="h2-bold">Orders</h2>
-			<div className="overflow-x-auto">
+			<div className="overflow-x-auto space-y-4">
 				<Table>
 					<TableHeader>
 						<TableRow>
@@ -50,7 +51,7 @@ export default async function OrdersPage({
 								<TableCell>
 									{order.isPaid && order.paidAt ? (
 										<div className="flex items-center gap-2">
-											<Badge className="bg-green-500 text-green-50">PAID</Badge>
+											<Badge className="bg-green-600 text-green-50">PAID</Badge>
 											{formatDateTime(order.paidAt).formattedDateTime}
 										</div>
 									) : (
@@ -61,22 +62,23 @@ export default async function OrdersPage({
 									{order.isDelivered && order.deliveredAt ? (
 										<div className="flex items-center gap-2">
 											{formatDateTime(order.deliveredAt).formattedDateTime}
-											<Badge className="bg-green-500 text-green-50">DELIVERED</Badge>
+											<Badge className="bg-green-600 text-white">DELIVERED</Badge>
 										</div>
 									) : (
 										<Badge variant="destructive">NOT DELIVERED</Badge>
 									)}
 								</TableCell>
 								<TableCell>
-									<Link href={`order/${order.id}`}>
+									<Link href={`/order/${order.id}`} className="flex gap-0.5 items-center">
+										<ExternalLink className="w-4 h-4" />
 										<span className="px-2">Details</span>
 									</Link>
 								</TableCell>
 							</TableRow>
 						))}
 					</TableBody>
-					{totalPages > 1 && <Pagination page={Number(page) || 1} totalPages={totalPages} />}
 				</Table>
+				{totalPages > 1 && <Pagination page={Number(page) || 1} totalPages={totalPages} />}
 			</div>
 		</div>
 	);

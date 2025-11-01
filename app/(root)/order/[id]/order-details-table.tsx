@@ -115,33 +115,35 @@ export default function OrderDetailsTable({
 					<Card>
 						<CardContent>
 							<CardTitle className="pb-4">Order Items</CardTitle>
-							<Table>
-								<TableHeader>
-									<TableRow>
-										<TableHead>Item</TableHead>
-										<TableHead>Quantity</TableHead>
-										<TableHead>Price</TableHead>
-									</TableRow>
-								</TableHeader>
-								<TableBody>
-									{orderitems.map(item => (
-										<TableRow key={item.slug}>
-											<TableCell>
-												<Link href={`/product/${item.slug}`} className="flex items-center">
-													<Image src={item.image} alt={item.name} width={50} height={50} />
-													<span className="px-2">{item.name}</span>
-												</Link>
-											</TableCell>
-											<TableCell>
-												<span className="px-2">{item.qty}</span>
-											</TableCell>
-											<TableCell>
-												<span className="px-2">${item.price}</span>
-											</TableCell>
+							<div className="overflow-x-auto">
+								<Table>
+									<TableHeader>
+										<TableRow>
+											<TableHead>Item</TableHead>
+											<TableHead>Quantity</TableHead>
+											<TableHead>Price</TableHead>
 										</TableRow>
-									))}
-								</TableBody>
-							</Table>
+									</TableHeader>
+									<TableBody>
+										{orderitems.map(item => (
+											<TableRow key={item.slug}>
+												<TableCell>
+													<Link href={`/product/${item.slug}`} className="flex items-center">
+														<Image src={item.image} alt={item.name} width={50} height={50} />
+														<span className="px-2">{item.name}</span>
+													</Link>
+												</TableCell>
+												<TableCell>
+													<span className="px-2">{item.qty}</span>
+												</TableCell>
+												<TableCell>
+													<span className="px-2">${item.price}</span>
+												</TableCell>
+											</TableRow>
+										))}
+									</TableBody>
+								</Table>
+							</div>
 						</CardContent>
 					</Card>
 				</div>

@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 	metadataBase: new URL(SERVER_URL),
 };
 
-export default function RootLayout({
+export default function AppLayout({
 	children,
 }: Readonly<{
 	children: React.ReactNode;

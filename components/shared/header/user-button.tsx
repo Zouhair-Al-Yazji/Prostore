@@ -9,7 +9,7 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SignOutUser } from '@/lib/actions/user.actions';
-import { UserIcon, History, LogOut } from 'lucide-react';
+import { UserIcon, History, LogOut, Shield } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function UserButton() {
@@ -39,6 +39,7 @@ export default async function UserButton() {
 						</Button>
 					</div>
 				</DropdownMenuTrigger>
+
 				<DropdownMenuContent className="w-52" align="end" forceMount>
 					<DropdownMenuLabel className="font-normal">
 						<div className="flex flex-col gap-1">
@@ -46,18 +47,31 @@ export default async function UserButton() {
 							<p className="text-sm text-muted-foreground leading-none">{session.user?.email}</p>
 						</div>
 					</DropdownMenuLabel>
+
 					<DropdownMenuSeparator />
+
 					<DropdownMenuItem>
-						<Link href="user/profile" className="w-full flex items-center gap-2">
+						<Link href="/user/profile" className="w-full flex items-center gap-2">
 							<UserIcon /> <span>User Profile</span>
 						</Link>
 					</DropdownMenuItem>
+
 					<DropdownMenuItem>
-						<Link href="user/orders" className="w-full flex items-center gap-2">
+						<Link href="/user/orders" className="w-full flex items-center gap-2">
 							<History />
 							<span>Order History</span>
 						</Link>
 					</DropdownMenuItem>
+
+					{session?.user?.role === 'admin' && (
+						<DropdownMenuItem>
+							<Link href="/admin/overview" className="w-full flex items-center gap-2">
+								<Shield />
+								<span>Admin</span>
+							</Link>
+						</DropdownMenuItem>
+					)}
+
 					<DropdownMenuItem className="p-0 mb-1">
 						<form action={SignOutUser} className="w-full">
 							<Button

@@ -57,12 +57,18 @@ export const config = {
 			return session;
 		},
 		// The JWT callback is called first, to create/update the token
-		async jwt({ token, user }: any) {
+		async jwt({ token, user, trigger, session }: any) {
 			if (user) {
 				// The user object comes from the `authorize` function
 				token.sub = user.id;
 				token.role = user.role;
 			}
+
+			// Handle session updates
+			if (session?.user.name && trigger === 'update') {
+				token.name = session.user.name;
+			}
+
 			return token;
 		},
 
