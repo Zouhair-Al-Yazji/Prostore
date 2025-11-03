@@ -13,12 +13,15 @@ import { BadgeDollarSign, Barcode, CreditCard, ExternalLink, Users } from 'lucid
 import { Metadata } from 'next';
 import Link from 'next/link';
 import Charts from './charts';
+import { requireAdmin } from '@/lib/auth-guard';
 
 export const metadata: Metadata = {
 	title: 'Admin Dashboard',
 };
 
 export default async function AdminOverviewPage() {
+	await requireAdmin();
+
 	const { usersCount, latestSales, ordersCount, productsCount, salesData, totalSales } =
 		await getOrderSummery();
 
