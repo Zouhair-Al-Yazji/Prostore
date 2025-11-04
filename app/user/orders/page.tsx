@@ -61,8 +61,8 @@ export default async function OrdersPage({
 								<TableCell>
 									{order.isDelivered && order.deliveredAt ? (
 										<div className="flex items-center gap-2">
-											{formatDateTime(order.deliveredAt).formattedDateTime}
 											<Badge className="bg-green-600 text-white">DELIVERED</Badge>
+											{formatDateTime(order.deliveredAt).formattedDateTime}
 										</div>
 									) : (
 										<Badge variant="destructive">NOT DELIVERED</Badge>
