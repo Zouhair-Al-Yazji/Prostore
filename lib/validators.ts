@@ -16,11 +16,16 @@ export const insertProductSchema = z.object({
 	category: z.string().min(3, 'Category must be at least 3 chars'),
 	brand: z.string().min(3, 'Brand must be at least 3 chars'),
 	description: z.string().min(3, 'Description must be at least 3 chars'),
-	stock: z.coerce.number(),
+	stock: z.number(),
 	images: z.array(z.string()).min(1, 'Product must have at least one image'),
 	isFeatured: z.boolean(),
 	banner: z.string().nullable(),
 	price: currency,
+});
+
+// Schema for updating product
+export const updateProductSchema = insertProductSchema.extend({
+	id: z.string().min(1, 'Id is required'),
 });
 
 // Schema for signing users in
