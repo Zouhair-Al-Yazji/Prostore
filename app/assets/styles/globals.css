@@ -2,6 +2,9 @@
 @import 'tailwindcss';
 @custom-variant dark (&:is(.dark *));
 
+@import 'uploadthing/tw/v4';
+@source "../../../node_modules/@uploadthing/react/dist";
+
 @layer utilities {
 	.wrapper {
 		@apply max-w-7xl lg:mx-auto p-5 md:px-10 w-full;

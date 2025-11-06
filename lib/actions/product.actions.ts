@@ -42,6 +42,7 @@ export async function getAllProducts({
 	const data = await prisma.product.findMany({
 		take: limit,
 		skip: (page - 1) * limit,
+		orderBy: { createdAt: 'desc' },
 	});
 
 	const dataCount = await prisma.product.count();
@@ -63,6 +64,7 @@ export async function deleteProduct(productId: string) {
 		});
 
 		revalidatePath('/admin/products');
+
 		return { success: true, message: `${formatId(productId)} product deleted successfully` };
 	} catch (error) {
 		return { success: false, message: formatError(error) };

@@ -4,9 +4,20 @@ import { productDefaultValues } from '@/lib/constants';
 import { insertProductSchema, updateProductSchema } from '@/lib/validators';
 import { Product } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'next/router';
-import { useForm } from 'react-hook-form';
+import { useRouter } from 'next/navigation';
+import { Controller, useForm } from 'react-hook-form';
 import z from 'zod';
+import { Field, FieldError, FieldGroup, FieldLabel, FieldSet } from '../ui/field';
+import { Input } from '../ui/input';
+import { Button } from '../ui/button';
+import { Textarea } from '../ui/textarea';
+import { Spinner } from '../ui/spinner';
+import slugify from 'slugify';
+import { createProduct, updateProduct } from '@/lib/actions/product.actions';
+import { toast } from 'sonner';
+import { Card, CardContent } from '../ui/card';
+import Image from 'next/image';
+import { UploadButton } from '@/lib/uploadthing';
 
 export default function ProductForm({
 	type,
@@ -21,31 +32,300 @@ export default function ProductForm({
 
 	const schema = type === 'Create' ? insertProductSchema : updateProductSchema;
 
-	const { handleSubmit, formState } = useForm<z.infer<typeof insertProductSchema>>({
+	const {
+		handleSubmit,
+		reset,
+		control,
+		setValue,
+		getValues,
+		watch,
+		formState: { isSubmitting },
+	} = useForm<z.infer<typeof schema>>({
 		resolver: zodResolver(schema),
 		defaultValues: type === 'Create' ? productDefaultValues : product,
 	});
 
-	function onSubmit(data: z.infer<typeof schema>) {}
+	async function onSubmit(data: z.infer<typeof schema>) {
+		// On create
+		if (type === 'Create') {
+			const res = await createProduct(data);
+
+			if (!res.success) {
+				toast.error(res.message);
+			} else {
+				toast.success(res.message);
+				router.push('/admin/products');
+			}
+		}
+
+		// On update
+		if (type === 'Update') {
+			if (!productId) {
+				router.push('/admin/products');
+				return;
+			}
+
+			const res = await updateProduct({ ...data, id: productId });
+
+			if (!res.success) {
+				toast.error(res.message);
+			} else {
+				toast.success(res.message);
+				router.push('/admin/products');
+			}
+		}
+	}
+
+	const images = watch('images');
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-			<div className="flex flex-col md:flex-row gap-5">
-				{/* name */}
-				{/* slug */}
-			</div>
-			<div className="flex flex-col md:flex-row gap-5">
-				{/* category */}
-				{/* brand */}
-			</div>
-			<div className="flex flex-col md:flex-row gap-5">
-				{/* price */}
-				{/* stock */}
-			</div>
-			<div className="upload-field flex flex-col md:flex-row gap-5">{/* images */}</div>
-			<div className="upload-field">{/* is featured */}</div>
-			<div>{/* description */}</div>
-			<div>{/* submit */}</div>
+		<form onSubmit={handleSubmit(onSubmit)} id="productForm" className="space-y-6">
+			<FieldSet>
+				<FieldGroup className="flex flex-col md:flex-row gap-5">
+					{/* name */}
+					<Controller
+						name="name"
+						control={control}
+						render={({ field, fieldState }) => (
+							<Field>
+								<FieldLabel data-invalid={fieldState.invalid} htmlFor="name">
+									Name
+								</FieldLabel>
+								<Input
+									{...field}
+									id="name"
+									aria-invalid={fieldState.invalid}
+									placeholder="Enter product name"
+									disabled={isSubmitting}
+								/>
+								{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+							</Field>
+						)}
+					/>
+					{/* slug */}
+					<Controller
+						name="slug"
+						control={control}
+						render={({ field, fieldState }) => (
+							<Field>
+								<FieldLabel data-invalid={fieldState.invalid} htmlFor="slug">
+									Slug
+								</FieldLabel>
+								<Input
+									{...field}
+									id="slug"
+									aria-invalid={fieldState.invalid}
+									placeholder="Enter slug"
+									disabled={isSubmitting}
+								/>
+								<div>
+									<Button
+										type="button"
+										disabled={isSubmitting}
+										size="sm"
+										className="bg-gray-600 cursor-pointer"
+										onClick={() => {
+											setValue('slug', slugify(getValues().name, { lower: true }));
+										}}
+									>
+										Generate
+									</Button>
+								</div>
+								{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+							</Field>
+						)}
+					/>
+				</FieldGroup>
+
+				<FieldGroup className="flex flex-col md:flex-row gap-5">
+					{/* category */}
+					<Controller
+						name="category"
+						control={control}
+						render={({ field, fieldState }) => (
+							<Field>
+								<FieldLabel data-invalid={fieldState.invalid} htmlFor="category">
+									Category
+								</FieldLabel>
+								<Input
+									{...field}
+									id="category"
+									aria-invalid={fieldState.invalid}
+									disabled={isSubmitting}
+									placeholder="Enter category"
+								/>
+								{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+							</Field>
+						)}
+					/>
+					{/* brand */}
+					<Controller
+						name="brand"
+						control={control}
+						render={({ field, fieldState }) => (
+							<Field>
+								<FieldLabel data-invalid={fieldState.invalid} htmlFor="brand">
+									Brand
+								</FieldLabel>
+								<Input
+									{...field}
+									id="brand"
+									aria-invalid={fieldState.invalid}
+									placeholder="Enter brand"
+									disabled={isSubmitting}
+								/>
+								{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+							</Field>
+						)}
+					/>
+				</FieldGroup>
+
+				<FieldGroup className="flex flex-col md:flex-row gap-5">
+					{/* price */}
+					<Controller
+						name="price"
+						control={control}
+						render={({ field, fieldState }) => (
+							<Field>
+								<FieldLabel data-invalid={fieldState.invalid} htmlFor="price">
+									Price
+								</FieldLabel>
+								<Input
+									{...field}
+									id="price"
+									aria-invalid={fieldState.invalid}
+									placeholder="Enter product price"
+									disabled={isSubmitting}
+								/>
+								{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+							</Field>
+						)}
+					/>
+					{/* stock */}
+					<Controller
+						name="stock"
+						control={control}
+						render={({ field, fieldState }) => (
+							<Field>
+								<FieldLabel data-invalid={fieldState.invalid} htmlFor="stock">
+									Stock
+								</FieldLabel>
+								<Input
+									{...field}
+									type="number"
+									min={0}
+									id="stock"
+									aria-invalid={fieldState.invalid}
+									placeholder="Enter stock"
+									disabled={isSubmitting}
+									onChange={e => {
+										const value =
+											e.target.value === '' ? productDefaultValues.stock : Number(e.target.value);
+										field.onChange(value);
+									}}
+								/>
+								{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+							</Field>
+						)}
+					/>
+				</FieldGroup>
+
+				<div className="upload-field flex flex-col md:flex-row gap-5">
+					{/* images */}
+					<Controller
+						name="images"
+						control={control}
+						render={({ fieldState }) => (
+							<Field>
+								<FieldLabel data-invalid={fieldState.invalid} htmlFor="images">
+									Images
+								</FieldLabel>
+								<Card>
+									<CardContent className="space-y-2 mt-2 min-h-48">
+										<div className="flex-start space-x-2">
+											{images.map((image: string) => (
+												<Image
+													key={image}
+													src={image}
+													width={100}
+													height={100}
+													className="w-20 h-20 object-cover object-center rounded-sm"
+													alt="product image"
+												/>
+											))}
+
+											<UploadButton
+												endpoint="imageUploader"
+												onUploadError={error => {
+													toast.error(error.message);
+												}}
+												onClientUploadComplete={(res: { url: string }[]) => {
+													setValue('images', [...images, res[0].url]);
+												}}
+											/>
+										</div>
+									</CardContent>
+								</Card>
+								{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+							</Field>
+						)}
+					/>
+				</div>
+				<div className="upload-field">{/* is featured */}</div>
+
+				<Field>
+					{/* description */}
+					<Controller
+						name="description"
+						control={control}
+						render={({ field, fieldState }) => (
+							<Field>
+								<FieldLabel data-invalid={fieldState.invalid} htmlFor="description">
+									Description
+								</FieldLabel>
+								<Textarea
+									{...field}
+									id="description"
+									aria-invalid={fieldState.invalid}
+									placeholder="Enter product description"
+									disabled={isSubmitting}
+								/>
+								{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+							</Field>
+						)}
+					/>
+				</Field>
+				<Field>
+					<Button
+						type="submit"
+						disabled={isSubmitting}
+						className="cursor-pointer"
+						form="productForm"
+					>
+						{isSubmitting ? (
+							type === 'Create' ? (
+								<span className="flex items-center gap-1">
+									<Spinner className="h-4 w-4" /> Creating Product
+								</span>
+							) : (
+								<span className="flex items-center gap-1">
+									<Spinner className="h-4 w-4" /> Updating Product
+								</span>
+							)
+						) : (
+							`${type} Product`
+						)}
+					</Button>
+					<Button
+						onClick={() => reset()}
+						disabled={isSubmitting}
+						className="cursor-pointer"
+						variant="outline"
+					>
+						Reset
+					</Button>
+				</Field>
+			</FieldSet>
 		</form>
 	);
 }
