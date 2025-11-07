@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { Card, CardContent } from '../ui/card';
 import Image from 'next/image';
 import { UploadButton } from '@/lib/uploadthing';
+import { Checkbox } from '../ui/checkbox';
 
 export default function ProductForm({
 	type,
@@ -77,6 +78,8 @@ export default function ProductForm({
 	}
 
 	const images = watch('images');
+	const isFeatured = watch('isFeatured');
+	const banner = watch('banner');
 
 	return (
 		<form onSubmit={handleSubmit(onSubmit)} id="productForm" className="space-y-6">
@@ -87,7 +90,7 @@ export default function ProductForm({
 						name="name"
 						control={control}
 						render={({ field, fieldState }) => (
-							<Field>
+							<Field data-invalid={fieldState.invalid}>
 								<FieldLabel data-invalid={fieldState.invalid} htmlFor="name">
 									Name
 								</FieldLabel>
@@ -102,15 +105,17 @@ export default function ProductForm({
 							</Field>
 						)}
 					/>
+
 					{/* slug */}
 					<Controller
 						name="slug"
 						control={control}
 						render={({ field, fieldState }) => (
-							<Field>
+							<Field data-invalid={fieldState.invalid}>
 								<FieldLabel data-invalid={fieldState.invalid} htmlFor="slug">
 									Slug
 								</FieldLabel>
+
 								<Input
 									{...field}
 									id="slug"
@@ -118,6 +123,7 @@ export default function ProductForm({
 									placeholder="Enter slug"
 									disabled={isSubmitting}
 								/>
+
 								<div>
 									<Button
 										type="button"
@@ -131,6 +137,7 @@ export default function ProductForm({
 										Generate
 									</Button>
 								</div>
+
 								{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 							</Field>
 						)}
@@ -143,7 +150,7 @@ export default function ProductForm({
 						name="category"
 						control={control}
 						render={({ field, fieldState }) => (
-							<Field>
+							<Field data-invalid={fieldState.invalid}>
 								<FieldLabel data-invalid={fieldState.invalid} htmlFor="category">
 									Category
 								</FieldLabel>
@@ -158,12 +165,13 @@ export default function ProductForm({
 							</Field>
 						)}
 					/>
+
 					{/* brand */}
 					<Controller
 						name="brand"
 						control={control}
 						render={({ field, fieldState }) => (
-							<Field>
+							<Field data-invalid={fieldState.invalid}>
 								<FieldLabel data-invalid={fieldState.invalid} htmlFor="brand">
 									Brand
 								</FieldLabel>
@@ -186,7 +194,7 @@ export default function ProductForm({
 						name="price"
 						control={control}
 						render={({ field, fieldState }) => (
-							<Field>
+							<Field data-invalid={fieldState.invalid}>
 								<FieldLabel data-invalid={fieldState.invalid} htmlFor="price">
 									Price
 								</FieldLabel>
@@ -201,12 +209,13 @@ export default function ProductForm({
 							</Field>
 						)}
 					/>
+
 					{/* stock */}
 					<Controller
 						name="stock"
 						control={control}
 						render={({ field, fieldState }) => (
-							<Field>
+							<Field data-invalid={fieldState.invalid}>
 								<FieldLabel data-invalid={fieldState.invalid} htmlFor="stock">
 									Stock
 								</FieldLabel>
@@ -224,77 +233,128 @@ export default function ProductForm({
 										field.onChange(value);
 									}}
 								/>
+
 								{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 							</Field>
 						)}
 					/>
 				</FieldGroup>
 
-				<div className="upload-field flex flex-col md:flex-row gap-5">
-					{/* images */}
-					<Controller
-						name="images"
-						control={control}
-						render={({ fieldState }) => (
-							<Field>
-								<FieldLabel data-invalid={fieldState.invalid} htmlFor="images">
-									Images
-								</FieldLabel>
-								<Card>
-									<CardContent className="space-y-2 mt-2 min-h-48">
-										<div className="flex-start space-x-2">
-											{images.map((image: string) => (
-												<Image
-													key={image}
-													src={image}
-													width={100}
-													height={100}
-													className="w-20 h-20 object-cover object-center rounded-sm"
-													alt="product image"
-												/>
-											))}
-
-											<UploadButton
-												endpoint="imageUploader"
-												onUploadError={error => {
-													toast.error(error.message);
-												}}
-												onClientUploadComplete={(res: { url: string }[]) => {
-													setValue('images', [...images, res[0].url]);
-												}}
+				{/* images */}
+				<Controller
+					name="images"
+					control={control}
+					render={({ fieldState }) => (
+						<Field data-invalid={fieldState.invalid}>
+							<FieldLabel data-invalid={fieldState.invalid} htmlFor="images">
+								Images
+							</FieldLabel>
+							<Card>
+								<CardContent className="space-y-2 mt-2">
+									<div className="flex-start space-x-2">
+										{images.map((image: string) => (
+											<Image
+												key={image}
+												src={image}
+												width={100}
+												height={100}
+												className="w-20 h-20 object-cover object-center rounded-sm"
+												alt="product image"
 											/>
-										</div>
-									</CardContent>
-								</Card>
-								{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-							</Field>
-						)}
-					/>
-				</div>
-				<div className="upload-field">{/* is featured */}</div>
+										))}
 
-				<Field>
-					{/* description */}
-					<Controller
-						name="description"
-						control={control}
-						render={({ field, fieldState }) => (
-							<Field>
-								<FieldLabel data-invalid={fieldState.invalid} htmlFor="description">
-									Description
-								</FieldLabel>
-								<Textarea
-									{...field}
-									id="description"
-									aria-invalid={fieldState.invalid}
-									placeholder="Enter product description"
-									disabled={isSubmitting}
+										<UploadButton
+											endpoint="imageUploader"
+											onUploadError={error => {
+												toast.error(error.message);
+											}}
+											onClientUploadComplete={(res: { ufsUrl: string }[]) => {
+												setValue('images', [...images, res[0].ufsUrl]);
+											}}
+										/>
+									</div>
+								</CardContent>
+							</Card>
+
+							{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+						</Field>
+					)}
+				/>
+
+				{/* isFeatured */}
+				<div className="space-y-3">
+					<FieldLabel>Featured Product</FieldLabel>
+					<Card>
+						<CardContent>
+							<Controller
+								name="isFeatured"
+								control={control}
+								render={({ field, fieldState }) => (
+									<Field data-invalid={fieldState.invalid} orientation="horizontal">
+										<Checkbox
+											id="isFeatured"
+											name={field.name}
+											aria-invalid={fieldState.invalid}
+											checked={field.value}
+											onCheckedChange={field.onChange}
+										/>
+
+										<FieldLabel data-invalid={fieldState.invalid} htmlFor="isFeatured">
+											Is Featured?
+										</FieldLabel>
+
+										{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+									</Field>
+								)}
+							/>
+
+							{isFeatured && banner && (
+								<Image
+									src={banner}
+									alt="Banner image"
+									className="w-full object-cover mt-2 object-center rounded-sm"
+									width={1920}
+									height={680}
 								/>
-								{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-							</Field>
-						)}
-					/>
-				</Field>
+							)}
+
+							{isFeatured && !banner && (
+								<UploadButton
+									endpoint="imageUploader"
+									onUploadError={error => {
+										toast.error(error.message);
+									}}
+									onClientUploadComplete={(res: { ufsUrl: string }[]) => {
+										setValue('banner', res[0].ufsUrl);
+									}}
+									className="mt-3"
+								/>
+							)}
+						</CardContent>
+					</Card>
+				</div>
+
+				{/* description */}
+				<Controller
+					name="description"
+					control={control}
+					render={({ field, fieldState }) => (
+						<Field data-invalid={fieldState.invalid}>
+							<FieldLabel data-invalid={fieldState.invalid} htmlFor="description">
+								Description
+							</FieldLabel>
+							<Textarea
+								{...field}
+								id="description"
+								aria-invalid={fieldState.invalid}
+								placeholder="Enter product description"
+								disabled={isSubmitting}
+							/>
+							{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+						</Field>
+					)}
+				/>
+
 				<Field>
 					<Button
 						type="submit"

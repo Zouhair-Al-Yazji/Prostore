@@ -75,7 +75,7 @@ export default async function AdminProductsPage({
 						))}
 					</TableBody>
 				</Table>
-				{totalPages && totalPages > 1 && <Pagination page={page} totalPages={totalPages} />}
+				{totalPages > 1 && <Pagination page={page} totalPages={totalPages} />}
 			</div>
 		</div>
 	);

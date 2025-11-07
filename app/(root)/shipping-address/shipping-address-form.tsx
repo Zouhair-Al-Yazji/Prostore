@@ -56,7 +56,7 @@ export default function ShippingAddressForm({ address }: { address: ShippingAddr
 							name="fullName"
 							control={control}
 							render={({ field, fieldState }) => (
-								<Field>
+								<Field data-invalid={fieldState.invalid}>
 									<FieldLabel data-invalid={fieldState.invalid} htmlFor="fullName">
 										Full name
 									</FieldLabel>
@@ -75,7 +75,7 @@ export default function ShippingAddressForm({ address }: { address: ShippingAddr
 							name="country"
 							control={control}
 							render={({ field, fieldState }) => (
-								<Field>
+								<Field data-invalid={fieldState.invalid}>
 									<FieldLabel data-invalid={fieldState.invalid} htmlFor="country">
 										Country
 									</FieldLabel>
@@ -94,7 +94,7 @@ export default function ShippingAddressForm({ address }: { address: ShippingAddr
 							name="city"
 							control={control}
 							render={({ field, fieldState }) => (
-								<Field>
+								<Field data-invalid={fieldState.invalid}>
 									<FieldLabel data-invalid={fieldState.invalid} htmlFor="city">
 										City
 									</FieldLabel>
@@ -113,7 +113,7 @@ export default function ShippingAddressForm({ address }: { address: ShippingAddr
 							name="streetAddress"
 							control={control}
 							render={({ field, fieldState }) => (
-								<Field>
+								<Field data-invalid={fieldState.invalid}>
 									<FieldLabel data-invalid={fieldState.invalid} htmlFor="streetAddress">
 										Address
 									</FieldLabel>
@@ -132,7 +132,7 @@ export default function ShippingAddressForm({ address }: { address: ShippingAddr
 							name="postalCode"
 							control={control}
 							render={({ field, fieldState }) => (
-								<Field>
+								<Field data-invalid={fieldState.invalid}>
 									<FieldLabel data-invalid={fieldState.invalid} htmlFor="postalCode">
 										Postal Code
 									</FieldLabel>
