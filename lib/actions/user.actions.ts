@@ -17,6 +17,7 @@ import { revalidatePath } from 'next/cache';
 import { PAGE_SIZE } from '../constants';
 import z from 'zod';
 import { UserCheck2 } from 'lucide-react';
+import { Prisma } from '@prisma/client';
 
 // Sign in the user with credentials
 export async function SignInWithCredentials(prevState: unknown, formData: FormData) {
@@ -157,8 +158,27 @@ export async function updateProfile(user: { name: string; email: string }) {
 }
 
 // Get all users
-export async function getAllUsers({ page, limit = PAGE_SIZE }: { page: number; limit?: number }) {
+export async function getAllUsers({
+	page,
+	limit = PAGE_SIZE,
+	query,
+}: {
+	page: number;
+	limit?: number;
+	query: string;
+}) {
+	const queryFilter: Prisma.UserWhereInput =
+		query && query !== 'all'
+			? {
+					name: {
+						contains: query,
+						mode: 'insensitive',
+					} as Prisma.StringFilter,
+			  }
+			: {};
+
 	const data = await prisma.user.findMany({
+		where: { ...queryFilter },
 		take: limit,
 		skip: (page - 1) * limit,
 		orderBy: { createdAt: 'desc' },

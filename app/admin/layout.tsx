@@ -5,6 +5,7 @@ import Link from 'next/link';
 import MainNav from './main-nav';
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
 import { Search } from 'lucide-react';
+import AdminSearch from '@/components/admin/admin-search';
 
 export default function AdminLayout({ children }: Readonly<{ children: React.ReactNode }>) {
 	return (
@@ -18,13 +19,7 @@ export default function AdminLayout({ children }: Readonly<{ children: React.Rea
 
 					<div className="ml-auto flex items-center space-x-4">
 						<div className="md:w-[100px] lg:w-[300px]">
-							<InputGroup>
-								<InputGroupInput placeholder="Search..." />
-								<InputGroupAddon>
-									<Search />
-								</InputGroupAddon>
-								<InputGroupAddon align="inline-end">12 results</InputGroupAddon>
-							</InputGroup>
+							<AdminSearch />
 						</div>
 						<Menu />
 					</div>

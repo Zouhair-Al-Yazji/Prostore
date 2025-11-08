@@ -24,16 +24,26 @@ export const metadata: Metadata = {
 export default async function AdminUsersPage({
 	searchParams,
 }: {
-	searchParams: Promise<{ page: string }>;
+	searchParams: Promise<{ page: string; query: string }>;
 }) {
 	await requireAdmin();
 
-	const { page = 1 } = await searchParams;
-	const { data, totalPages } = await getAllUsers({ page: Number(page) });
+	const { page = 1, query = '' } = await searchParams;
+	const { data, totalPages } = await getAllUsers({ page: Number(page), query });
 
 	return (
 		<div className="space-y-2">
-			<h2 className="h2-bold">Users</h2>
+			<div className="flex items-center gap-2">
+				<h1 className="h2-bold">Users</h1>
+				{query && (
+					<div>
+						Filtered by <i>&quot;{query}&quot;</i>{' '}
+						<Button variant="outline" size="sm" asChild>
+							<Link href="/admin/users">Remove Filter</Link>
+						</Button>
+					</div>
+				)}
+			</div>
 			<div className="overflow-x-auto space-y-4">
 				<Table>
 					<TableHeader>
