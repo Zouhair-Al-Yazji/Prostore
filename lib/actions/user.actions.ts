@@ -6,12 +6,17 @@ import {
 	shippingAddressSchema,
 	signInFormSchema,
 	signUpFormSchema,
+	updateUserSchema,
 } from '../validators';
 import { isRedirectError } from 'next/dist/client/components/redirect-error';
 import { hashSync } from 'bcrypt-ts-edge';
 import prisma from '@/db/prisma';
-import { formatError } from '../utils';
+import { formatError, formatId } from '../utils';
 import { PaymentMethod, ShippingAddress } from '@/types';
+import { revalidatePath } from 'next/cache';
+import { PAGE_SIZE } from '../constants';
+import z from 'zod';
+import { UserCheck2 } from 'lucide-react';
 
 // Sign in the user with credentials
 export async function SignInWithCredentials(prevState: unknown, formData: FormData) {
@@ -145,6 +150,60 @@ export async function updateProfile(user: { name: string; email: string }) {
 			},
 		});
 
+		return { success: true, message: 'User updated successfully' };
+	} catch (error) {
+		return { success: false, message: formatError(error) };
+	}
+}
+
+// Get all users
+export async function getAllUsers({ page, limit = PAGE_SIZE }: { page: number; limit?: number }) {
+	const data = await prisma.user.findMany({
+		take: limit,
+		skip: (page - 1) * limit,
+		orderBy: { createdAt: 'desc' },
+	});
+
+	const dataCount = await prisma.user.count();
+
+	return {
+		data,
+		totalPages: Math.ceil(dataCount / limit),
+	};
+}
+
+// Delete a user by id
+export async function deleteUserById(userId: string) {
+	try {
+		const existingUser = await prisma.user.findFirst({
+			where: { id: userId },
+		});
+
+		if (!existingUser) throw Error('User not found');
+
+		await prisma.user.delete({
+			where: { id: userId },
+		});
+
+		revalidatePath('/admin/users');
+		return { success: true, message: `${formatId} user deleted successfully` };
+	} catch (error) {
+		return { success: false, message: formatError(error) };
+	}
+}
+
+// Update user
+export async function updateUser(user: z.infer<typeof updateUserSchema>) {
+	try {
+		await prisma.user.update({
+			where: { id: user.id },
+			data: {
+				name: user.name,
+				role: user.role,
+			},
+		});
+
+		revalidatePath('/admin/users');
 		return { success: true, message: 'User updated successfully' };
 	} catch (error) {
 		return { success: false, message: formatError(error) };
