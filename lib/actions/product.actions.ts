@@ -2,12 +2,12 @@
 
 import prisma from '@/db/prisma';
 import type { Product } from '@/types';
-import { LATEST_PRODUCTS_LIMIT, PAGE_SIZE } from '../constants';
-import { convertToPlainObject, formatError, formatId } from '../utils';
+import { Prisma } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import z from 'zod';
+import { LATEST_PRODUCTS_LIMIT, PAGE_SIZE } from '../constants';
+import { convertToPlainObject, formatError, formatId } from '../utils';
 import { insertProductSchema, updateProductSchema } from '../validators';
-import { Prisma } from '@prisma/client';
 
 export async function getLatestProducts(): Promise<Product[]> {
 	const data = await prisma.product.findMany({

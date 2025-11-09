@@ -3,8 +3,6 @@ import { APP_NAME } from '@/lib/constants';
 import Image from 'next/image';
 import Link from 'next/link';
 import MainNav from './main-nav';
-import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
-import { Search } from 'lucide-react';
 import AdminSearch from '@/components/admin/admin-search';
 
 export default function AdminLayout({ children }: Readonly<{ children: React.ReactNode }>) {

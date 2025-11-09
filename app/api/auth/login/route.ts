@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server';
 import prisma from '@/db/prisma';
 import { compareSync } from 'bcrypt-ts-edge';
 import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
 	try {
