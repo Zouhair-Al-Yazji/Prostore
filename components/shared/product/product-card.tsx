@@ -6,7 +6,7 @@ import type { Product } from '@/types';
 
 export default function ProductCard({ product }: { product: Product }) {
 	return (
-		<Card className="py-3">
+		<Card>
 			<CardHeader>
 				<Link href={`/product/${product.slug}`}>
 					<Image

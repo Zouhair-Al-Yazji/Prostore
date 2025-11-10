@@ -1,6 +1,15 @@
 'use server';
 
-import { signOut, signIn, auth } from '@/auth';
+import { auth, signIn, signOut } from '@/auth';
+import prisma from '@/db/prisma';
+import { PaymentMethod, ShippingAddress } from '@/types';
+import { Prisma } from '@prisma/client';
+import { hashSync } from 'bcrypt-ts-edge';
+import { revalidatePath } from 'next/cache';
+import { isRedirectError } from 'next/dist/client/components/redirect-error';
+import z from 'zod';
+import { PAGE_SIZE } from '../constants';
+import { formatError, formatId } from '../utils';
 import {
 	paymentMethodSchema,
 	shippingAddressSchema,
@@ -8,16 +17,6 @@ import {
 	signUpFormSchema,
 	updateUserSchema,
 } from '../validators';
-import { isRedirectError } from 'next/dist/client/components/redirect-error';
-import { hashSync } from 'bcrypt-ts-edge';
-import prisma from '@/db/prisma';
-import { formatError, formatId } from '../utils';
-import { PaymentMethod, ShippingAddress } from '@/types';
-import { revalidatePath } from 'next/cache';
-import { PAGE_SIZE } from '../constants';
-import z from 'zod';
-import { UserCheck2 } from 'lucide-react';
-import { Prisma } from '@prisma/client';
 
 // Sign in the user with credentials
 export async function SignInWithCredentials(prevState: unknown, formData: FormData) {

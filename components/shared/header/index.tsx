@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import Menu from './menu';
 import CategoryDrawer from './category-drawer';
+import Search from './search';
 
 export default function Header() {
 	return (
@@ -21,6 +22,11 @@ export default function Header() {
 						<span className="hidden lg:block text-xl font-bold">{APP_NAME}</span>
 					</Link>
 				</div>
+
+				<div className="hidden md:block">
+					<Search />
+				</div>
+
 				<Menu />
 			</div>
 		</header>

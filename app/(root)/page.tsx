@@ -1,5 +1,6 @@
 import ProductCarousel from '@/components/shared/product/product-carousel';
 import ProductList from '@/components/shared/product/product-list';
+import ViewAllProductsButton from '@/components/view-all-products-button';
 import { getFeaturedProducts, getLatestProducts } from '@/lib/actions/product.actions';
 import { LATEST_PRODUCTS_LIMIT } from '@/lib/constants';
 
@@ -11,6 +12,7 @@ export default async function Page() {
 		<>
 			{featuredProducts.length > 0 && <ProductCarousel data={featuredProducts} />}
 			<ProductList data={latestProduct} title="Newest Arrivals" limit={LATEST_PRODUCTS_LIMIT} />
+			<ViewAllProductsButton />
 		</>
 	);
 }
