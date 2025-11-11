@@ -1,5 +1,6 @@
 import Pagination from '@/components/shared/pagination';
 import ProductCard from '@/components/shared/product/product-card';
+import { Button } from '@/components/ui/button';
 import { getAllCategories, getAllProducts } from '@/lib/actions/product.actions';
 import Link from 'next/link';
 
@@ -10,6 +11,34 @@ const prices = [
 	{ name: '$201 to $500', value: '200-500' },
 	{ name: '$501 to $1000', value: '501-1000' },
 ];
+
+const ratings = [1, 2, 3, 4];
+
+const sortOrders = ['newest', 'lowest', 'highest', 'rating'];
+
+export async function generateMetadata({
+	searchParams,
+}: {
+	searchParams: Promise<{ q: string; category: string; price: string; rating: string }>;
+}) {
+	const { category = 'all', q = 'all', price = 'all', rating = 'all' } = await searchParams;
+	const isQuerySet = q && q !== 'all' && q.trim() !== '';
+	const isCategorySet = category && category !== 'all' && category.trim() !== '';
+	const isPriceSet = price && price !== 'all' && price !== '';
+	const isRatingSet = rating && rating !== 'all' && rating !== '';
+
+	if (isQuerySet || isCategorySet || isPriceSet || isRatingSet) {
+		return {
+			title: `Search ${isQuerySet ? q : ''} ${isCategorySet ? `: Category ${category}` : ''} ${
+				isPriceSet ? `: Price ${price}` : ''
+			} ${isRatingSet ? `: Rating ${rating}` : ''}`,
+		};
+	} else {
+		return {
+			title: 'Search',
+		};
+	}
+}
 
 export default async function SearchPage({
 	searchParams,
@@ -47,8 +76,6 @@ export default async function SearchPage({
 		pg?: string;
 	}) {
 		const params = { category, q, price, rating, page, sort };
-
-		console.log(params);
 
 		if (c) params.category = c;
 		if (p) params.price = p;
@@ -119,9 +146,63 @@ export default async function SearchPage({
 						))}
 					</ul>
 				</div>
+				<h2 className="mb-2 mt-8 text-xl">Customer Rating</h2>
+				<div>
+					<ul className="space-y-1">
+						<li>
+							<Link
+								href={getFilterUrl({ r: 'all' })}
+								className={`${rating === 'all' && 'font-bold'}`}
+							>
+								All
+							</Link>
+						</li>
+						{ratings.map(r => (
+							<li key={r}>
+								<Link
+									href={getFilterUrl({ r: r.toString() })}
+									className={`${rating === r.toString() && 'font-bold'}`}
+								>
+									{`${r} stars & up`}
+								</Link>
+							</li>
+						))}
+					</ul>
+				</div>
 			</div>
 
 			<div className="md:col-span-4 space-y-4">
+				<div className="flex-between flex-col md:flex-row my-4">
+					<div className="flex items-center gap-1">
+						<span>{q !== 'all' && q !== '' && 'Query: ' + q}</span>
+						<span>{category !== 'all' && category !== '' && 'Category: ' + category}</span>
+						<span>{price !== 'all' && 'Price: ' + price}</span>
+						<span>{rating !== 'all' && 'Rating: ' + rating + ' starts & up'}</span>
+						&nbsp;
+						{(q !== 'all' && q !== '') ||
+						(category !== 'all' && category !== '') ||
+						price !== 'all' ||
+						rating !== 'all' ? (
+							<Button asChild size="sm" variant="outline">
+								<Link href="/search">Clear Filter</Link>
+							</Button>
+						) : null}
+					</div>
+
+					<div>
+						Sort By{' '}
+						{sortOrders.map(s => (
+							<Link
+								className={`mx-2 ${s === sort && 'font-bold'}`}
+								href={getFilterUrl({ s })}
+								key={s}
+							>
+								{s}
+							</Link>
+						))}
+					</div>
+				</div>
+
 				<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 					{data.length === 0 && <div>No Products Found</div>}
 					{data.map(product => (
