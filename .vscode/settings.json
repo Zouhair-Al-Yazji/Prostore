@@ -6,5 +6,6 @@
 		"sccessfuly",
 		"turbopack",
 		"uploadthing"
-	]
+	],
+	"git.ignoreLimitWarning": true
 }
