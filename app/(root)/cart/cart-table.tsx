@@ -25,6 +25,14 @@ export default function CartTable({ cart }: { cart?: Cart }) {
 	const router = useRouter();
 	const [isPending, startTransition] = useTransition();
 
+	if (!cart) {
+		return (
+			<div className="flex justify-center items-center py-8">
+				<Spinner />
+			</div>
+		);
+	}
+
 	async function handleRemoveFromCart(productId: string) {
 		startTransition(async () => {
 			const res = await removeItemFromCart(productId);
@@ -34,6 +42,7 @@ export default function CartTable({ cart }: { cart?: Cart }) {
 			}
 
 			toast.success(res.message);
+			router.refresh();
 		});
 	}
 
@@ -46,6 +55,7 @@ export default function CartTable({ cart }: { cart?: Cart }) {
 			}
 
 			toast.success(res.message);
+			router.refresh();
 		});
 	}
 
