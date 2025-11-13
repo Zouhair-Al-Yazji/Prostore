@@ -1,3 +1,5 @@
+'use client';
+
 import { Button } from '@/components/ui/button';
 import {
 	Dialog,
@@ -18,12 +20,16 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
+import { createUpdateReview, getReviewByProductId } from '@/lib/actions/review.actions';
 import { reviewFormDefaultValues } from '@/lib/constants';
 import { insertReviewSchema } from '@/lib/validators';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { StarIcon } from 'lucide-react';
+import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 import z from 'zod';
 
 export default function ReviewForm({
@@ -36,24 +42,56 @@ export default function ReviewForm({
 	onReviewSubmitted?: () => void;
 }) {
 	const {
-		reset,
 		control,
 		handleSubmit,
+		setValue,
 		formState: { isSubmitting },
 	} = useForm<z.infer<typeof insertReviewSchema>>({
 		resolver: zodResolver(insertReviewSchema),
 		defaultValues: reviewFormDefaultValues,
 	});
 
-	function onSubmit() {}
+	const [open, setOpen] = useState(false);
+
+	async function handleOpenForm() {
+		setValue('productId', productId);
+		setValue('userId', userId);
+
+		const review = await getReviewByProductId({ productId });
+
+		if (review) {
+			setValue('title', review.title);
+			setValue('description', review.description);
+			setValue('rating', review.rating);
+		}
+
+		setOpen(true);
+	}
+
+	async function onSubmit(data: z.infer<typeof insertReviewSchema>) {
+		const res = await createUpdateReview({ ...data, productId });
+
+		if (!res.success) {
+			return toast.error(res.message);
+		}
+
+		if (onReviewSubmitted) onReviewSubmitted();
+
+		toast(res.message);
+
+		setOpen(false);
+	}
 
 	return (
-		<Dialog>
-			<form onSubmit={handleSubmit(onSubmit)}>
-				<DialogTrigger asChild>
-					<Button>Write a review</Button>
-				</DialogTrigger>
-				<DialogContent className="sm:max-w-md">
+		<Dialog open={open} onOpenChange={setOpen}>
+			<DialogTrigger asChild>
+				<Button onClick={handleOpenForm} className="mt-3">
+					Write a Review
+				</Button>
+			</DialogTrigger>
+
+			<DialogContent className="sm:max-w-md">
+				<form onSubmit={handleSubmit(onSubmit)}>
 					<DialogHeader>
 						<DialogTitle>Write a review</DialogTitle>
 						<DialogDescription>Share your thoughts with other customers</DialogDescription>
@@ -131,15 +169,25 @@ export default function ReviewForm({
 						/>
 					</FieldGroup>
 
-					<DialogFooter>
-						<DialogClose asChild>
-							<Button variant="outline">Cancel</Button>
-						</DialogClose>
+					<Field className="mt-4">
+						<DialogFooter>
+							<DialogClose asChild>
+								<Button variant="outline">Cancel</Button>
+							</DialogClose>
 
-						<Button type="submit">Submit</Button>
-					</DialogFooter>
-				</DialogContent>
-			</form>
+							<Button type="submit" disabled={isSubmitting}>
+								{isSubmitting ? (
+									<>
+										<Spinner className="h-4 w-4" /> Submitting
+									</>
+								) : (
+									'Submit'
+								)}
+							</Button>
+						</DialogFooter>
+					</Field>
+				</form>
+			</DialogContent>
 		</Dialog>
 	);
 }
