@@ -29,15 +29,18 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useTransition } from 'react';
 import { Spinner } from '@/components/ui/spinner';
+import StripePayment from './stripe-payment';
 
 export default function OrderDetailsTable({
 	order,
+	stripeClientSecret,
 	paypalClientId,
 	isAdmin,
 }: {
 	order: Order;
 	paypalClientId: string;
 	isAdmin: boolean;
+	stripeClientSecret: string | null;
 }) {
 	const {
 		id,
@@ -234,6 +237,7 @@ export default function OrderDetailsTable({
 								<p>Total</p>
 								<p>{formatCurrency(totalPrice)}</p>
 							</div>
+
 							{/* Paypal Payment */}
 							{!isPaid && paymentMethod === 'PayPal' && (
 								<div>
@@ -245,6 +249,15 @@ export default function OrderDetailsTable({
 										/>
 									</PayPalScriptProvider>
 								</div>
+							)}
+
+							{/* Stripe Payment */}
+							{!isPaid && paymentMethod === 'Stripe' && stripeClientSecret && (
+								<StripePayment
+									orderId={id}
+									clientSecret={stripeClientSecret}
+									priceInCents={Number(totalPrice) * 100}
+								/>
 							)}
 
 							{/* Cash On Delivery */}
