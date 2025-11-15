@@ -6,6 +6,7 @@ import Link from 'next/link';
 import CredentialsSignInForm from './credentials-signin-form';
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
+import type { Route } from 'next';
 
 export const metadata: Metadata = {
 	title: 'Sign In',
@@ -19,7 +20,7 @@ export default async function SignInPage({
 	const { callbackUrl } = await searchParams;
 	const session = await auth();
 
-	if (session) redirect(callbackUrl || '/');
+	if (session) redirect((callbackUrl as Route) || '/');
 
 	return (
 		<div className="w-full px-4 max-w-md mx-auto">
