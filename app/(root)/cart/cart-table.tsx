@@ -1,5 +1,6 @@
 'use client';
 
+import StarRating from '@/components/star-rating';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
@@ -27,8 +28,8 @@ export default function CartTable({ cart }: { cart?: Cart }) {
 
 	if (!cart) {
 		return (
-			<div className="flex justify-center items-center py-8">
-				<Spinner />
+			<div>
+				Cart is empty. <Link href="/">Go shopping</Link>
 			</div>
 		);
 	}
