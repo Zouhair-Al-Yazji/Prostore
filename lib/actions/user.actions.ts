@@ -36,6 +36,11 @@ export async function SignInWithCredentials(prevState: unknown, formData: FormDa
 	}
 }
 
+// Sign in the user with google
+export async function SignInWithGoogle() {
+	await signIn('google');
+}
+
 // Sign user out
 export async function SignOutUser() {
 	await signOut();

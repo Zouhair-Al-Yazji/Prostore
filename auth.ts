@@ -1,11 +1,12 @@
 import NextAuth, { type NextAuthConfig } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { NextResponse } from 'next/server';
+import Google from 'next-auth/providers/google';
 
 export const config = {
 	pages: {
 		signIn: '/sign-in',
-		error: '/error',
+		error: '/sign-in',
 	},
 	session: {
 		strategy: 'jwt',
@@ -46,22 +47,57 @@ export const config = {
 				}
 			},
 		}),
+		Google({
+			clientId: process.env.AUTH_GOOGLE_ID,
+			clientSecret: process.env.AUTH_GOOGLE_SECRET,
+		}),
 	],
 	callbacks: {
-		// The session callback gets data from the JWT token
-		async session({ session, token }: any) {
-			if (token.sub && session.user) {
-				session.user.id = token.sub;
-				session.user.role = token.role as string; // Cast role to its type
+		async signIn({ user, account }: any) {
+			console.log('signIn', { user, account });
+			// Handle Google sign-in - find or create user in your database
+			if (account?.provider === 'google') {
+				try {
+					const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/auth/google`, {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify({
+							email: user.email,
+							name: user.name,
+							image: user.image,
+						}),
+					});
+
+					if (res.ok) {
+						const dbUser = await res.json();
+						// Merge database user data with the auth user object
+						user.id = dbUser.id;
+						user.role = dbUser.role;
+						return true;
+					} else {
+						return false;
+					}
+				} catch (error) {
+					console.error('Google sign-in error:', error);
+					return false;
+				}
 			}
-			return session;
+
+			if (account?.provider === 'credentials') {
+				return true;
+			}
+
+			return false;
 		},
 		// The JWT callback is called first, to create/update the token
 		async jwt({ token, user, trigger, session }: any) {
 			if (user) {
 				// The user object comes from the `authorize` function
 				token.sub = user.id;
-				token.role = user.role;
+				token.role = user.role || 'user';
+				token.image = user.image;
 			}
 
 			// Handle session updates
@@ -72,7 +108,18 @@ export const config = {
 			return token;
 		},
 
-		// This authorized callback is fine as it doesn't use Prisma
+		// The session callback gets data from the JWT token
+		async session({ session, token }: any) {
+			if (token.sub && session.user) {
+				session.user.id = token.sub;
+				session.user.role = token.role as string;
+				if (token.image) {
+					session.user.image = token.image as string;
+				}
+			}
+
+			return session;
+		},
 		async authorized({ request, auth }) {
 			const protectedPaths = [
 				/\/shipping-address/,
@@ -85,6 +132,7 @@ export const config = {
 			];
 			const { pathname } = request.nextUrl;
 
+			// Admin route protection
 			if (!auth && protectedPaths.some(path => path.test(pathname))) {
 				return false;
 			}
@@ -94,6 +142,7 @@ export const config = {
 				const sessionCartId = crypto.randomUUID();
 				const response = NextResponse.next();
 				response.cookies.set('sessionCartId', sessionCartId);
+
 				return response;
 			}
 

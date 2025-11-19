@@ -143,6 +143,7 @@ export async function removeItemFromCart(productId: string) {
 		const product = await prisma.product.findFirst({
 			where: { id: productId },
 		});
+
 		if (!product) throw new Error('Product not found');
 
 		// Get user cart
@@ -173,8 +174,63 @@ export async function removeItemFromCart(productId: string) {
 
 		revalidatePath(`/product/${product.slug}`);
 
-		return { success: true, message: `${product.name} was removed from cart` };
+		return { success: true, message: 'Item removed from cart' };
 	} catch (error) {
 		return { success: false, message: formatError(error) };
+	}
+}
+
+export async function mergeAnonymousCartIntoUserCart(userId: string, sessionCartId: string) {
+	try {
+		// Find the anonymous cart and the user's cart
+		const anonymousCart = await prisma.cart.findFirst({
+			where: { sessionCartId },
+		});
+
+		const userCart = await prisma.cart.findFirst({
+			where: { userId },
+		});
+
+		if (anonymousCart) {
+			if (userCart) {
+				// Merge items from anonymous cart to user's cart
+				const mergedItems = [...(userCart.items as CartItem[])];
+
+				for (const anonymousItem of anonymousCart.items as CartItem[]) {
+					const existingItem = mergedItems.find(item => item.productId === anonymousItem.productId);
+
+					if (existingItem) {
+						// If item exists, update quantity
+						existingItem.qty += anonymousItem.qty;
+					} else {
+						// If item doesn't exist, add it to the cart
+						mergedItems.push(anonymousItem);
+					}
+				}
+
+				// Update user's cart with merged items and recalculate price
+				await prisma.cart.update({
+					where: { id: userCart.id },
+					data: {
+						items: mergedItems as Prisma.CartUpdateitemsInput[],
+						...calcPrice(mergedItems),
+					},
+				});
+
+				// Delete the anonymous cart
+				await prisma.cart.delete({
+					where: { id: anonymousCart.id },
+				});
+			} else {
+				// If user has no cart, assign the anonymous cart to the user
+				await prisma.cart.update({
+					where: { id: anonymousCart.id },
+					data: { userId },
+				});
+			}
+		}
+	} catch (error) {
+		console.error('Error merging carts:', error);
+		throw new Error('Could not merge carts');
 	}
 }

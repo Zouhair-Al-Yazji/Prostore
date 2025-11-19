@@ -1,12 +1,14 @@
+import { auth } from '@/auth';
+import SignInGithupButton from '@/components/shared/signin-githup-button';
+import SignInGoogleButton from '@/components/shared/signin-google-button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { APP_NAME } from '@/lib/constants';
+import type { Route } from 'next';
 import { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import CredentialsSignInForm from './credentials-signin-form';
-import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
-import type { Route } from 'next';
+import CredentialsSignInForm from './credentials-signin-form';
 
 export const metadata: Metadata = {
 	title: 'Sign In',
@@ -19,6 +21,8 @@ export default async function SignInPage({
 }) {
 	const { callbackUrl } = await searchParams;
 	const session = await auth();
+
+	console.log(session);
 
 	if (session) redirect((callbackUrl as Route) || '/');
 
@@ -39,6 +43,17 @@ export default async function SignInPage({
 					<CardDescription className="text-center">Sign in to your account</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-4">
+					<div className="grid grid-cols-2 gap-2 mb-4">
+						<SignInGoogleButton />
+						<SignInGithupButton />
+					</div>
+					<div className="relative">
+						<hr />
+						<span className="absolute bg-white px-1 top-0 left-2/4 -translate-2/4 text-sm text-muted-foreground">
+							or continue
+						</span>
+					</div>
+
 					<CredentialsSignInForm />
 				</CardContent>
 			</Card>

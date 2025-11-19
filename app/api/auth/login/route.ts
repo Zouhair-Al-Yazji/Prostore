@@ -1,3 +1,4 @@
+import { mergeAnonymousCartIntoUserCart } from '@/lib/actions/cart.actions';
 import prisma from '@/db/prisma';
 import { compareSync } from 'bcrypt-ts-edge';
 import { cookies } from 'next/headers';
@@ -21,27 +22,9 @@ export async function POST(req: Request) {
 			const isMatch = compareSync(password, user.password);
 
 			if (isMatch) {
-				// Handle cart merging logic
-				const cookiesObject = await cookies();
-				const sessionCartId = cookiesObject.get('sessionCartId')?.value;
-
-				if (sessionCartId) {
-					const sessionCart = await prisma.cart.findFirst({
-						where: { sessionCartId },
-					});
-
-					if (sessionCart) {
-						// Delete any existing cart for this user
-						await prisma.cart.deleteMany({ where: { userId: user.id } });
-						// Assign the session cart to the logged-in user
-						await prisma.cart.update({
-							where: { id: sessionCart.id },
-							data: {
-								userId: user.id,
-								sessionCartId,
-							},
-						});
-					}
+				const sessionCartId = cookies().get('sessionCartId')?.value;
+				if (sessionCartId && user) {
+					await mergeAnonymousCartIntoUserCart(user.id, sessionCartId);
 				}
 
 				// Return the user object (without the password)
@@ -50,6 +33,7 @@ export async function POST(req: Request) {
 					name: user.name,
 					email: user.email,
 					role: user.role,
+					image: user.image,
 				});
 			}
 		}
