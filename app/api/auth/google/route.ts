@@ -37,6 +37,7 @@ export async function POST(req: Request) {
 		}
 
 		const sessionCartId = (await cookies()).get('sessionCartId')?.value;
+
 		if (sessionCartId && user) {
 			await mergeAnonymousCartIntoUserCart(user.id, sessionCartId);
 		}

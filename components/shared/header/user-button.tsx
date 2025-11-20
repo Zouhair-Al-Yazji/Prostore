@@ -11,6 +11,7 @@ import {
 import { SignOutUser } from '@/lib/actions/user.actions';
 import { UserIcon, History, LogOut, Shield } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default async function UserButton() {
 	const session = await auth();
@@ -33,20 +34,50 @@ export default async function UserButton() {
 			<DropdownMenu>
 				<DropdownMenuTrigger className="cursor-pointer" asChild>
 					<div className="flex items-center">
-						<Button
-							variant={'ghost'}
-							className="relative w-8 h-8 flex-center bg-gray-200 rounded-full"
-						>
-							{firstInitial}
-						</Button>
+						{session.user.image ? (
+							<Image
+								src={session.user.image}
+								width={32}
+								height={32}
+								alt={`${session.user.name} image`}
+								className="rounded-full hover:opacity-80 object-cover object-center"
+							/>
+						) : (
+							<Button
+								variant={'ghost'}
+								className="relative w-8 h-8 flex-center bg-gray-200 rounded-full"
+							>
+								{firstInitial}
+							</Button>
+						)}
 					</div>
 				</DropdownMenuTrigger>
 
-				<DropdownMenuContent className="w-52" align="end" forceMount>
+				<DropdownMenuContent className="w-55" align="end" forceMount>
 					<DropdownMenuLabel className="font-normal">
-						<div className="flex flex-col gap-1">
-							<p className="text-sm font-medium leading-none">{session.user?.name}</p>
-							<p className="text-sm text-muted-foreground leading-none">{session.user?.email}</p>
+						<div className="flex gap-2 items-center">
+							<div>
+								{session.user.image ? (
+									<Image
+										src={session.user.image}
+										width={32}
+										height={32}
+										alt={`${session.user.name} image`}
+										className="rounded-full hover:opacity-80 object-cover object-center"
+									/>
+								) : (
+									<Button
+										variant={'ghost'}
+										className="relative w-8 h-8 flex-center bg-gray-200 rounded-full"
+									>
+										{firstInitial}
+									</Button>
+								)}
+							</div>
+							<div className="flex flex-col gap-1">
+								<p className="text-sm font-medium leading-none">{session.user?.name}</p>
+								<p className="text-sm text-muted-foreground leading-none">{session.user?.email}</p>
+							</div>
 						</div>
 					</DropdownMenuLabel>
 

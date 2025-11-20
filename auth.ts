@@ -54,7 +54,6 @@ export const config = {
 	],
 	callbacks: {
 		async signIn({ user, account }: any) {
-			console.log('signIn', { user, account });
 			// Handle Google sign-in - find or create user in your database
 			if (account?.provider === 'google') {
 				try {

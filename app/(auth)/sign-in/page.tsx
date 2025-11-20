@@ -1,5 +1,5 @@
 import { auth } from '@/auth';
-import SignInGithupButton from '@/components/shared/signin-githup-button';
+import SignInGithupButton from '@/components/shared/signin-github-button';
 import SignInGoogleButton from '@/components/shared/signin-google-button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { APP_NAME } from '@/lib/constants';
@@ -22,8 +22,6 @@ export default async function SignInPage({
 	const { callbackUrl } = await searchParams;
 	const session = await auth();
 
-	console.log(session);
-
 	if (session) redirect((callbackUrl as Route) || '/');
 
 	return (
@@ -43,11 +41,11 @@ export default async function SignInPage({
 					<CardDescription className="text-center">Sign in to your account</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-4">
-					<div className="grid grid-cols-2 gap-2 mb-4">
+					<div className="grid grid-cols-2 gap-2">
 						<SignInGoogleButton />
 						<SignInGithupButton />
 					</div>
-					<div className="relative">
+					<div className="relative my-6">
 						<hr />
 						<span className="absolute bg-white px-1 top-0 left-2/4 -translate-2/4 text-sm text-muted-foreground">
 							or continue

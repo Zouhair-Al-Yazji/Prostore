@@ -18,7 +18,7 @@ export default function PlaceOrderForm() {
 		if (res.redirectTo) router.push(res.redirectTo);
 	}
 
-	const PlaceOrderButton = function () {
+	function PlaceOrderButton() {
 		const { pending } = useFormStatus();
 
 		return (
@@ -26,7 +26,7 @@ export default function PlaceOrderForm() {
 				{pending ? <Spinner className="w-4 h-4" /> : <Check className="w-4 h-4" />} Place Order
 			</Button>
 		);
-	};
+	}
 
 	return (
 		<form className="w-full" onSubmit={handleSubmit}>

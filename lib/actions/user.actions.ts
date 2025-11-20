@@ -36,7 +36,7 @@ export async function SignInWithCredentials(prevState: unknown, formData: FormDa
 	}
 }
 
-// Sign in the user with google
+// Sign in the user with google or githup
 export async function SignInWithGoogle() {
 	await signIn('google');
 }

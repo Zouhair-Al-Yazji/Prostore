@@ -6,6 +6,8 @@ import Link from 'next/link';
 import SignUpForm from './signup-form';
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
+import SignInGoogleButton from '@/components/shared/signin-google-button';
+import SignInGithupButton from '@/components/shared/signin-github-button';
 
 export const metadata: Metadata = {
 	title: 'Sign Up',
@@ -18,6 +20,8 @@ export default async function SignUpPage({
 }) {
 	const { callbackUrl } = await searchParams;
 	const session = await auth();
+
+	console.log(session);
 
 	if (session) redirect(callbackUrl || '/');
 
@@ -40,6 +44,17 @@ export default async function SignUpPage({
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-4">
+					<div className="grid grid-cols-2 gap-2">
+						<SignInGoogleButton />
+						<SignInGithupButton />
+					</div>
+					<div className="relative my-6">
+						<hr />
+						<span className="absolute bg-white px-1 top-0 left-2/4 -translate-2/4 text-sm text-muted-foreground">
+							or continue
+						</span>
+					</div>
+
 					<SignUpForm />
 				</CardContent>
 			</Card>
