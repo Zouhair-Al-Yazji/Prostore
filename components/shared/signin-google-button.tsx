@@ -9,11 +9,11 @@ import { Chrome } from 'lucide-react';
 export default function SignInGoogleButton() {
 	const [isPending, startTransition] = useTransition();
 
-	const handleSubmit = () => {
+	function handleSubmit() {
 		startTransition(async () => {
 			await SignInWithGoogle();
 		});
-	};
+	}
 
 	return (
 		<form action={handleSubmit}>

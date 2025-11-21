@@ -22,7 +22,7 @@ export async function POST(req: Request) {
 			const isMatch = compareSync(password, user.password);
 
 			if (isMatch) {
-				const sessionCartId = cookies().get('sessionCartId')?.value;
+				const sessionCartId = (await cookies()).get('sessionCartId')?.value;
 				if (sessionCartId && user) {
 					await mergeAnonymousCartIntoUserCart(user.id, sessionCartId);
 				}

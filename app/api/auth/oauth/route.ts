@@ -16,7 +16,7 @@ export async function POST(req: Request) {
 		});
 
 		if (!user) {
-			// Create new user for google sign-in
+			// Create new user for google or github sign-in
 			user = await prisma.user.create({
 				data: {
 					email,
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
 				},
 			});
 		} else {
-			// Update existing user with Google data if needed
+			// Update existing user with Google or Githup data if needed
 			if (!user.image && image) {
 				user = await prisma.user.update({
 					where: { email },

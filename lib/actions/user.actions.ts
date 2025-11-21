@@ -36,9 +36,14 @@ export async function SignInWithCredentials(prevState: unknown, formData: FormDa
 	}
 }
 
-// Sign in the user with google or githup
+// Sign in the user with google
 export async function SignInWithGoogle() {
 	await signIn('google');
+}
+
+// Sign in the user with githup
+export async function SignInWithGithub() {
+	await signIn('github');
 }
 
 // Sign user out

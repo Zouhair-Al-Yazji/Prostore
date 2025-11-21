@@ -2,6 +2,7 @@ import NextAuth, { type NextAuthConfig } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { NextResponse } from 'next/server';
 import Google from 'next-auth/providers/google';
+import Github from 'next-auth/providers/github';
 
 export const config = {
 	pages: {
@@ -51,13 +52,14 @@ export const config = {
 			clientId: process.env.AUTH_GOOGLE_ID,
 			clientSecret: process.env.AUTH_GOOGLE_SECRET,
 		}),
+		Github({ clientId: process.env.AUTH_GITHUB_ID, clientSecret: process.env.AUTH_GITHUB_SECRET }),
 	],
 	callbacks: {
 		async signIn({ user, account }: any) {
-			// Handle Google sign-in - find or create user in your database
-			if (account?.provider === 'google') {
+			// Handle Google and Github sign-in - find or create user in your database
+			if (account?.provider === 'google' || account?.provider === 'github') {
 				try {
-					const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/auth/google`, {
+					const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/auth/oauth`, {
 						method: 'POST',
 						headers: {
 							'Content-Type': 'application/json',

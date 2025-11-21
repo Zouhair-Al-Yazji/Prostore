@@ -16,8 +16,6 @@ import Image from 'next/image';
 export default async function UserButton() {
 	const session = await auth();
 
-	console.log(session);
-
 	if (!session)
 		return (
 			<Button asChild>
@@ -40,7 +38,9 @@ export default async function UserButton() {
 								width={32}
 								height={32}
 								alt={`${session.user.name} image`}
-								className="rounded-full hover:opacity-80 object-cover object-center"
+								className="rounded-full border hover:opacity-80 object-cover object-center"
+								quality={100}
+								priority={true}
 							/>
 						) : (
 							<Button
@@ -63,7 +63,7 @@ export default async function UserButton() {
 										width={32}
 										height={32}
 										alt={`${session.user.name} image`}
-										className="rounded-full hover:opacity-80 object-cover object-center"
+										className="rounded-full hover:opacity-80 border object-cover object-center"
 									/>
 								) : (
 									<Button
