@@ -142,7 +142,7 @@ export async function updateUserPaymentMethod(data: PaymentMethod) {
 }
 
 // Update the user profile
-export async function updateProfile(user: { name: string; email: string }) {
+export async function updateProfile(user: { name: string; email: string; image: string }) {
 	try {
 		const session = await auth();
 		if (!session) throw new Error('User is not authorized');
@@ -157,6 +157,7 @@ export async function updateProfile(user: { name: string; email: string }) {
 			where: { id: currentUser.id },
 			data: {
 				name: user.name,
+				image: user.image,
 			},
 		});
 

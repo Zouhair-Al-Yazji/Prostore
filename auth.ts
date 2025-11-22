@@ -56,6 +56,7 @@ export const config = {
 	],
 	callbacks: {
 		async signIn({ user, account }: any) {
+			console.log(user, account);
 			// Handle Google and Github sign-in - find or create user in your database
 			if (account?.provider === 'google' || account?.provider === 'github') {
 				try {
@@ -68,6 +69,7 @@ export const config = {
 							email: user.email,
 							name: user.name,
 							image: user.image,
+							provider: account?.provider === 'google' ? 'google' : 'github',
 						}),
 					});
 
