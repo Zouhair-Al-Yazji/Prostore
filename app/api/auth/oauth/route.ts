@@ -60,6 +60,7 @@ export async function POST(req: Request) {
 			role: user.role,
 		});
 	} catch (error) {
+		console.error(error);
 		return NextResponse.json({ error: 'An internal server error occurred' }, { status: 500 });
 	}
 }

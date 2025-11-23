@@ -1,6 +1,5 @@
 'use client';
 
-import StarRating from '@/components/star-rating';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';

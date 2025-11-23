@@ -13,14 +13,22 @@ export default async function AdminUserUpdatePage({ params }: { params: Promise<
 
 	const { id } = await params;
 
-	const user = await getUserById(id);
+	const { id: userId, email, name, role, image } = await getUserById(id);
 
-	if (!user) notFound();
+	if (!userId) notFound();
 
 	return (
 		<div className="max-w-lg mx-auto space-y-4">
 			<h2 className="h2-bold">Update User</h2>
-			<UpdateUserForm user={user} />
+			<UpdateUserForm
+				user={{
+					id: userId,
+					email,
+					name,
+					role,
+					image: image || '',
+				}}
+			/>
 		</div>
 	);
 }
