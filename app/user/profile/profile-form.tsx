@@ -13,23 +13,27 @@ import {
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
+import { type FileWithPreview } from '@/hooks/use-file-upload';
 import { updateProfile } from '@/lib/actions/user.actions';
+import { useUploadThing } from '@/lib/uploadthing';
 import { updateProfileSchema } from '@/lib/validators';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useSession } from 'next-auth/react';
-import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import z from 'zod';
 
 export default function ProfileForm() {
 	const { data: session, update } = useSession();
+	const [file, setFile] = useState<FileWithPreview | null>();
+	const router = useRouter();
 
 	const {
 		handleSubmit,
 		control,
 		reset,
-		setValue,
 		watch,
 		register,
 		formState: { isSubmitting },
@@ -42,28 +46,53 @@ export default function ProfileForm() {
 		},
 	});
 
+	const { startUpload, isUploading } = useUploadThing('avatar', {
+		onUploadError: err => {
+			console.log(err.cause);
+			toast.error('Error uploading file');
+		},
+	});
+
 	async function onSubmit(data: z.infer<typeof updateProfileSchema>) {
-		const res = await updateProfile(data);
+		let image = data.image;
+
+		if (file) {
+			const res = await startUpload([file.file as File]);
+			if (!res) {
+				toast.error('Error uploading file');
+				return;
+			}
+			image = res[0].ufsUrl;
+		}
+
+		const res = await updateProfile({ ...data, image });
 
 		if (!res.success) {
 			toast.error(res.message);
 			return;
 		}
 
-		const newSession = {
-			...session,
+		const updatedSession = await update({
 			user: {
-				...session?.user,
 				name: data.name,
-				image: data.image,
+				image,
 			},
-		};
+		});
 
-		await update(newSession);
+		if (updatedSession) {
+			reset({
+				email: updatedSession.user?.email ?? '',
+				name: updatedSession.user?.name ?? '',
+				image: updatedSession.user?.image ?? '',
+			});
+		}
+
 		toast.success(res.message);
+		router.refresh();
 	}
 
 	const image = watch('image');
+	const isUpdating = isSubmitting || isUploading;
 
 	return (
 		<Card className="w-full">
@@ -106,7 +135,7 @@ export default function ProfileForm() {
 										id="name"
 										aria-invalid={fieldState.invalid}
 										placeholder="Enter name"
-										disabled={isSubmitting}
+										disabled={isUpdating}
 									/>
 									{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 								</Field>
@@ -114,7 +143,7 @@ export default function ProfileForm() {
 						/>
 						<Field>
 							<FieldLabel>Avatar</FieldLabel>
-							<AvatarUpload defaultAvatar={image} />
+							<AvatarUpload defaultAvatar={image} onFileChange={setFile} />
 							<input type="hidden" {...register('image')} />
 						</Field>
 					</FieldGroup>
@@ -122,10 +151,10 @@ export default function ProfileForm() {
 			</CardContent>
 			<CardFooter>
 				<Field>
-					<Button type="submit" disabled={isSubmitting} form="updateProfileForm">
-						{isSubmitting ? <Spinner className="h-4 w-4" /> : 'Update Profile'}
+					<Button type="submit" disabled={isUpdating} form="updateProfileForm">
+						{isUpdating ? <Spinner className="h-4 w-4" /> : 'Update Profile'}
 					</Button>
-					<Button type="button" disabled={isSubmitting} variant={'outline'} onClick={() => reset()}>
+					<Button type="button" disabled={isUpdating} variant={'outline'} onClick={() => reset()}>
 						Reset
 					</Button>
 				</Field>

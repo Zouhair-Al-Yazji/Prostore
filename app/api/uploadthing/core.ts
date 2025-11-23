@@ -20,6 +20,21 @@ export const ourFileRouter = {
 		.onUploadComplete(async ({ metadata }) => {
 			return { uploadedBy: metadata.userId };
 		}),
+	avatar: f({
+		image: {
+			maxFileSize: '2MB',
+		},
+	})
+		.middleware(async () => {
+			const session = await auth();
+
+			if (!session) throw new UploadThingError('Unauthorized');
+
+			return { userId: session.user.id };
+		})
+		.onUploadComplete(async ({ metadata }) => {
+			return { uploadedBy: metadata.userId };
+		}),
 } satisfies FileRouter;
 
 export type OurFileRouter = typeof ourFileRouter;

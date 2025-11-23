@@ -1,111 +1,144 @@
 'use client';
 
 import { formatBytes, useFileUpload, type FileWithPreview } from '@/hooks/use-file-upload';
-import { Alert, AlertContent, AlertDescription, AlertIcon, AlertTitle } from '@/components/ui/alert';
+import {
+	Alert,
+	AlertContent,
+	AlertDescription,
+	AlertIcon,
+	AlertTitle,
+} from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { TriangleAlert, User, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useEffect, useRef } from 'react';
 
 interface AvatarUploadProps {
-  maxSize?: number;
-  className?: string;
-  onFileChange?: (file: FileWithPreview | null) => void;
-  defaultAvatar?: string;
+	maxSize?: number;
+	className?: string;
+	onFileChange?: (file: FileWithPreview | null) => void;
+	defaultAvatar?: string;
 }
 
 export default function AvatarUpload({
-  maxSize = 2 * 1024 * 1024, // 2MB
-  className,
-  onFileChange,
-  defaultAvatar,
+	maxSize = 2 * 1024 * 1024, // 2MB
+	className,
+	onFileChange,
+	defaultAvatar,
 }: AvatarUploadProps) {
-  const [
-    { files, isDragging, errors },
-    { removeFile, handleDragEnter, handleDragLeave, handleDragOver, handleDrop, openFileDialog, getInputProps },
-  ] = useFileUpload({
-    maxFiles: 1,
-    maxSize,
-    accept: 'image/*',
-    multiple: false,
-    onFilesChange: (files) => {
-      onFileChange?.(files[0] || null);
-    },
-  });
+	const [
+		{ files, isDragging, errors },
+		{
+			removeFile,
+			handleDragEnter,
+			handleDragLeave,
+			handleDragOver,
+			handleDrop,
+			openFileDialog,
+			getInputProps,
+			clearFiles,
+		},
+	] = useFileUpload({
+		maxFiles: 1,
+		maxSize,
+		accept: 'image/*',
+		multiple: false,
+	});
 
-  const currentFile = files[0];
-  const previewUrl = currentFile?.preview || defaultAvatar;
+	const currentFile = files[0];
+	const previewUrl = currentFile?.preview || defaultAvatar;
+	const prevDefaultAvatarRef = useRef(defaultAvatar);
 
-  const handleRemove = () => {
-    if (currentFile) {
-      removeFile(currentFile.id);
-    }
-  };
+	useEffect(() => {
+		onFileChange?.(currentFile || null);
+	}, [currentFile, onFileChange]);
 
-  return (
-    <div className={cn('flex flex-col items-center gap-4', className)}>
-      {/* Avatar Preview */}
-      <div className="relative">
-        <div
-          className={cn(
-            'group/avatar relative h-24 w-24 cursor-pointer overflow-hidden rounded-full border border-dashed transition-colors',
-            isDragging ? 'border-primary bg-primary/5' : 'border-muted-foreground/25 hover:border-muted-foreground/20',
-            previewUrl && 'border-solid',
-          )}
-          onDragEnter={handleDragEnter}
-          onDragLeave={handleDragLeave}
-          onDragOver={handleDragOver}
-          onDrop={handleDrop}
-          onClick={openFileDialog}
-        >
-          <input {...getInputProps()} className="sr-only" />
+	// Effect to clear the internal file state only when the defaultAvatar has actually changed.
+	useEffect(() => {
+		const prevDefaultAvatar = prevDefaultAvatarRef.current;
 
-          {previewUrl ? (
-            <img src={previewUrl} alt="Avatar" className="h-full w-full object-cover" />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center">
-              <User className="size-6 text-muted-foreground" />
-            </div>
-          )}
-        </div>
+		// Check if a local file is selected and if the defaultAvatar prop has been updated.
+		if (currentFile && defaultAvatar && prevDefaultAvatar !== defaultAvatar) {
+			clearFiles();
+		}
 
-        {/* Remove Button - only show when file is uploaded */}
-        {currentFile && (
-          <Button
-            size="icon"
-            variant="outline"
-            onClick={handleRemove}
-            className="size-6 absolute end-0 top-0 rounded-full"
-            aria-label="Remove avatar"
-          >
-            <X className="size-3.5" />
-          </Button>
-        )}
-      </div>
+		// Update the ref to the current defaultAvatar for the next render cycle.
+		prevDefaultAvatarRef.current = defaultAvatar;
+	}, [defaultAvatar, currentFile, clearFiles]);
 
-      {/* Upload Instructions */}
-      <div className="text-center space-y-0.5">
-        <p className="text-sm font-medium">{currentFile ? 'Avatar uploaded' : 'Upload avatar'}</p>
-        <p className="text-xs text-muted-foreground">PNG, JPG up to {formatBytes(maxSize)}</p>
-      </div>
+	const handleRemove = () => {
+		if (currentFile) {
+			removeFile(currentFile.id);
+		}
+	};
 
-      {/* Error Messages */}
-      {errors.length > 0 && (
-        <Alert variant="destructive" appearance="light" className="mt-5">
-          <AlertIcon>
-            <TriangleAlert />
-          </AlertIcon>
-          <AlertContent>
-            <AlertTitle>File upload error(s)</AlertTitle>
-            <AlertDescription>
-              {errors.map((error, index) => (
-                <p key={index} className="last:mb-0">
-                  {error}
-                </p>
-              ))}
-            </AlertDescription>
-          </AlertContent>
-        </Alert>
-      )}
-    </div>
-  );
+	return (
+		<div className={cn('flex flex-col items-center gap-4', className)}>
+			{/* Avatar Preview */}
+			<div className="relative">
+				<div
+					className={cn(
+						'group/avatar relative h-24 w-24 cursor-pointer overflow-hidden rounded-full border border-dashed transition-colors',
+						isDragging
+							? 'border-primary bg-primary/5'
+							: 'border-muted-foreground/25 hover:border-muted-foreground/20',
+						previewUrl && 'border-solid'
+					)}
+					onDragEnter={handleDragEnter}
+					onDragLeave={handleDragLeave}
+					onDragOver={handleDragOver}
+					onDrop={handleDrop}
+					onClick={openFileDialog}
+				>
+					<input {...getInputProps()} className="sr-only" />
+
+					{previewUrl ? (
+						<img src={previewUrl} alt="Avatar" className="h-full w-full object-cover" />
+					) : (
+						<div className="flex h-full w-full items-center justify-center">
+							<User className="size-6 text-muted-foreground" />
+						</div>
+					)}
+				</div>
+
+				{/* Remove Button - only show when file is uploaded */}
+				{currentFile && (
+					<Button
+						size="icon"
+						variant="outline"
+						onClick={handleRemove}
+						className="size-6 absolute end-0 top-0 rounded-full"
+						aria-label="Remove avatar"
+					>
+						<X className="size-3.5" />
+					</Button>
+				)}
+			</div>
+
+			{/* Upload Instructions */}
+			<div className="text-center space-y-0.5">
+				<p className="text-sm font-medium">{currentFile ? 'Avatar uploaded' : 'Upload avatar'}</p>
+				<p className="text-xs text-muted-foreground">PNG, JPG up to {formatBytes(maxSize)}</p>
+			</div>
+
+			{/* Error Messages */}
+			{errors.length > 0 && (
+				<Alert variant="destructive" appearance="light" className="mt-5">
+					<AlertIcon>
+						<TriangleAlert />
+					</AlertIcon>
+					<AlertContent>
+						<AlertTitle>File upload error(s)</AlertTitle>
+						<AlertDescription>
+							{errors.map((error, index) => (
+								<p key={index} className="last:mb-0">
+									{error}
+								</p>
+							))}
+						</AlertDescription>
+					</AlertContent>
+				</Alert>
+			)}
+		</div>
+	);
 }
