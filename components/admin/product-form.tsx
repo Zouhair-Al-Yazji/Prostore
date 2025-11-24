@@ -1,24 +1,27 @@
 'use client';
 
+import { createProduct, updateProduct } from '@/lib/actions/product.actions';
 import { productDefaultValues } from '@/lib/constants';
+import { UploadButton } from '@/lib/uploadthing';
 import { insertProductSchema, updateProductSchema } from '@/lib/validators';
 import { Product } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import slugify from 'slugify';
+import { toast } from 'sonner';
 import z from 'zod';
+import BannerUpload from '../banner-upload';
+import SortableImageUpload from '../sortable';
+import { Button } from '../ui/button';
+import { Card, CardContent } from '../ui/card';
+import { Checkbox } from '../ui/checkbox';
 import { Field, FieldError, FieldGroup, FieldLabel, FieldSet } from '../ui/field';
 import { Input } from '../ui/input';
-import { Button } from '../ui/button';
-import { Textarea } from '../ui/textarea';
 import { Spinner } from '../ui/spinner';
-import slugify from 'slugify';
-import { createProduct, updateProduct } from '@/lib/actions/product.actions';
-import { toast } from 'sonner';
-import { Card, CardContent } from '../ui/card';
-import Image from 'next/image';
-import { UploadButton } from '@/lib/uploadthing';
-import { Checkbox } from '../ui/checkbox';
+import { Textarea } from '../ui/textarea';
 
 export default function ProductForm({
 	type,
@@ -30,6 +33,7 @@ export default function ProductForm({
 	productId?: string;
 }) {
 	const router = useRouter();
+	const [banner, setBanner] = useState<string | null>();
 
 	const schema = type === 'Create' ? insertProductSchema : updateProductSchema;
 
@@ -79,7 +83,7 @@ export default function ProductForm({
 
 	const images = watch('images');
 	const isFeatured = watch('isFeatured');
-	const banner = watch('banner');
+	const watchBanner = watch('banner');
 
 	return (
 		<form onSubmit={handleSubmit(onSubmit)} id="productForm" className="space-y-6">
@@ -272,6 +276,8 @@ export default function ProductForm({
 												setValue('images', [...images, res[0].ufsUrl]);
 											}}
 										/>
+
+										<SortableImageUpload />
 									</div>
 								</CardContent>
 							</Card>
@@ -290,7 +296,11 @@ export default function ProductForm({
 								name="isFeatured"
 								control={control}
 								render={({ field, fieldState }) => (
-									<Field data-invalid={fieldState.invalid} orientation="horizontal">
+									<Field
+										data-invalid={fieldState.invalid}
+										className="mb-2"
+										orientation="horizontal"
+									>
 										<Checkbox
 											id="isFeatured"
 											name={field.name}
@@ -308,26 +318,13 @@ export default function ProductForm({
 								)}
 							/>
 
-							{isFeatured && banner && (
-								<Image
-									src={banner}
-									alt="Banner image"
-									className="w-full object-cover mt-2 object-center rounded-sm"
-									width={1920}
-									height={680}
-								/>
-							)}
-
 							{isFeatured && !banner && (
-								<UploadButton
-									endpoint="imageUploader"
-									onUploadError={error => {
-										toast.error(error.message);
+								<BannerUpload
+									defaultCoverImage={watchBanner || ''}
+									onImageChange={url => {
+										setBanner(url);
+										setValue('banner', url || '');
 									}}
-									onClientUploadComplete={(res: { ufsUrl: string }[]) => {
-										setValue('banner', res[0].ufsUrl);
-									}}
-									className="mt-3"
 								/>
 							)}
 						</CardContent>
