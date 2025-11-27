@@ -33,8 +33,6 @@ export default function ProductForm({
 	productId?: string;
 }) {
 	const router = useRouter();
-	const [banner, setBanner] = useState<string | null>();
-
 	const schema = type === 'Create' ? insertProductSchema : updateProductSchema;
 
 	const {
@@ -83,7 +81,7 @@ export default function ProductForm({
 
 	const images = watch('images');
 	const isFeatured = watch('isFeatured');
-	const watchBanner = watch('banner');
+	const banner = watch('banner');
 
 	return (
 		<form onSubmit={handleSubmit(onSubmit)} id="productForm" className="space-y-6">
@@ -319,13 +317,7 @@ export default function ProductForm({
 							/>
 
 							{isFeatured && !banner && (
-								<BannerUpload
-									defaultCoverImage={watchBanner || ''}
-									onImageChange={url => {
-										setBanner(url);
-										setValue('banner', url || '');
-									}}
-								/>
+								<BannerUpload onBannerChange={url => setValue('banner', url)} />
 							)}
 						</CardContent>
 					</Card>
