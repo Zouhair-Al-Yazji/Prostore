@@ -2,13 +2,13 @@
 
 import { createProduct, updateProduct } from '@/lib/actions/product.actions';
 import { productDefaultValues } from '@/lib/constants';
-import { UploadButton } from '@/lib/uploadthing';
+import { UploadButton, useUploadThing } from '@/lib/uploadthing';
 import { insertProductSchema, updateProductSchema } from '@/lib/validators';
 import { Product } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import slugify from 'slugify';
 import { toast } from 'sonner';
@@ -22,6 +22,8 @@ import { Field, FieldError, FieldGroup, FieldLabel, FieldSet } from '../ui/field
 import { Input } from '../ui/input';
 import { Spinner } from '../ui/spinner';
 import { Textarea } from '../ui/textarea';
+import { FileWithPreview } from '@/hooks/use-file-upload';
+import { Progress } from '../ui/progress';
 
 export default function ProductForm({
 	type,
@@ -35,6 +37,23 @@ export default function ProductForm({
 	const router = useRouter();
 	const schema = type === 'Create' ? insertProductSchema : updateProductSchema;
 
+	const [banner, setBanner] = useState<FileWithPreview | null>();
+	const [progress, setProgress] = useState(0);
+
+	const { isUploading, startUpload } = useUploadThing('imageUploader', {
+		onClientUploadComplete: res => {
+			setValue('banner', res[0].ufsUrl);
+			setBanner(null);
+			toast.success('Banner Uploaded Successfully');
+		},
+		onUploadError: err => {
+			toast.error(err.message);
+		},
+		onUploadProgress: progress => {
+			setProgress(progress);
+		},
+	});
+
 	const {
 		handleSubmit,
 		reset,
@@ -42,6 +61,7 @@ export default function ProductForm({
 		setValue,
 		getValues,
 		watch,
+		register,
 		formState: { isSubmitting },
 	} = useForm<z.infer<typeof schema>>({
 		resolver: zodResolver(schema),
@@ -79,9 +99,14 @@ export default function ProductForm({
 		}
 	}
 
+	const handleRemoveBanner = useCallback(() => {
+		setValue('banner', '', { shouldDirty: true });
+		setBanner(null);
+	}, [setValue]);
+
 	const images = watch('images');
 	const isFeatured = watch('isFeatured');
-	const banner = watch('banner');
+	const watchedBanner = watch('banner');
 
 	return (
 		<form onSubmit={handleSubmit(onSubmit)} id="productForm" className="space-y-6">
@@ -316,8 +341,38 @@ export default function ProductForm({
 								)}
 							/>
 
-							{isFeatured && !banner && (
-								<BannerUpload onBannerChange={url => setValue('banner', url)} />
+							{isFeatured && (
+								<>
+									<BannerUpload
+										defaultBanner={watchedBanner || ''}
+										onBannerChange={setBanner}
+										onRemove={handleRemoveBanner}
+									/>
+								</>
+							)}
+
+							{isFeatured && banner && (
+								<Button
+									className="mt-3"
+									disabled={isUploading}
+									type="button"
+									onClick={() => startUpload([banner.file as File])}
+								>
+									{isUploading ? (
+										<span className="flex items-center gap-1">
+											<Spinner />
+											Uploading
+										</span>
+									) : (
+										'Upload Banner'
+									)}
+								</Button>
+							)}
+
+							{isFeatured && banner && isUploading && (
+								<div className="my-4">
+									<Progress value={progress} className="transition-all duration-300" />
+								</div>
 							)}
 						</CardContent>
 					</Card>
@@ -347,7 +402,7 @@ export default function ProductForm({
 				<Field>
 					<Button
 						type="submit"
-						disabled={isSubmitting}
+						disabled={isSubmitting || isUploading}
 						className="cursor-pointer"
 						form="productForm"
 					>

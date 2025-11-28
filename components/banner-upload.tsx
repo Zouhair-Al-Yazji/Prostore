@@ -8,18 +8,18 @@ import {
 	AlertTitle,
 } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { useFileUpload, type FileMetadata, type FileWithPreview } from '@/hooks/use-file-upload';
+import { useFileUpload, type FileWithPreview } from '@/hooks/use-file-upload';
 import { cn } from '@/lib/utils';
-import { useUploadThing } from '@/lib/uploadthing';
 import { CloudUpload, ImageIcon, TriangleAlert, Upload, XIcon } from 'lucide-react';
-import { useState } from 'react';
-import { toast } from 'sonner';
+import { useEffect, useRef } from 'react';
 
 interface BannerUploadProps {
 	maxSize?: number;
 	accept?: string;
 	className?: string;
-	onBannerChange: (url: string) => void;
+	onBannerChange?: (banner: FileWithPreview | null) => void;
+	onRemove?: () => void;
+	defaultBanner?: string;
 }
 
 export default function CoverUpload({
@@ -27,58 +27,51 @@ export default function CoverUpload({
 	accept = 'image/*',
 	className,
 	onBannerChange,
+	onRemove,
+	defaultBanner,
 }: BannerUploadProps) {
-	// Default banner image
-	const defaultBannerImage: FileMetadata = {
-		id: 'default-cover',
-		name: 'cover-image.jpg',
-		size: 2048000,
-		type: 'image/jpeg',
-		url: 'https://picsum.photos/1000/800?grayscale&random=3',
-	};
-
-	const [bannerImage, setBannerImage] = useState<FileWithPreview | null>({
-		id: defaultBannerImage.id,
-		file: defaultBannerImage,
-		preview: defaultBannerImage.url,
-	});
-	const [imageLoading, setImageLoading] = useState(true);
-
-	const { startUpload, isUploading } = useUploadThing('imageUploader', {
-		onClientUploadComplete: res => {
-			if (res && res.length > 0 && res[0].url) {
-				onBannerChange(res[0].url);
-				toast.success('Banner uploaded successfully');
-			}
-		},
-		onUploadError: error => {
-			toast.error(error.message);
-		},
-	});
-
 	const [
-		{ isDragging, errors },
-		{ handleDragEnter, handleDragLeave, handleDragOver, handleDrop, openFileDialog, getInputProps },
+		{ files, isDragging, errors },
+		{
+			handleDragEnter,
+			handleDragLeave,
+			handleDragOver,
+			handleDrop,
+			openFileDialog,
+			removeFile,
+			getInputProps,
+			clearFiles,
+		},
 	] = useFileUpload({
 		maxFiles: 1,
 		maxSize,
 		accept,
 		multiple: false,
-		onFilesChange: files => {
-			if (files.length > 0) {
-				setImageLoading(true);
-				setBannerImage(files[0]);
-				startUpload([files[0].file as File]);
-			}
-		},
 	});
 
-	const removeBannerImage = () => {
-		setBannerImage(null);
-		setImageLoading(false);
-	};
+	const currentFile = files[0];
+	const previewUrl = currentFile?.preview || defaultBanner;
+	const prevDefaultBannerRef = useRef(defaultBanner);
 
-	const hasImage = bannerImage && bannerImage.preview;
+	useEffect(() => {
+		const prevDefaultBanner = prevDefaultBannerRef.current;
+		if (currentFile && defaultBanner && prevDefaultBanner !== defaultBanner) {
+			clearFiles();
+		}
+		prevDefaultBannerRef.current = defaultBanner;
+	}, [defaultBanner, currentFile, clearFiles]);
+
+	useEffect(() => {
+		onBannerChange?.(currentFile || null);
+	}, [currentFile, onBannerChange]);
+
+	const removeBannerImage = () => {
+		if (currentFile) {
+			removeFile(currentFile.id);
+		} else if (defaultBanner) {
+			onRemove?.();
+		}
+	};
 
 	return (
 		<div className={cn('w-full space-y-4', className)}>
@@ -88,7 +81,7 @@ export default function CoverUpload({
 					'group relative overflow-hidden rounded-xl transition-all duration-200 border border-border',
 					isDragging
 						? 'border-dashed border-primary bg-primary/5'
-						: hasImage
+						: previewUrl
 						? 'border-border bg-background hover:border-primary/50'
 						: 'border-dashed border-muted-foreground/25 bg-muted/30 hover:border-primary hover:bg-primary/5'
 				)}
@@ -100,30 +93,15 @@ export default function CoverUpload({
 				{/* Hidden file input */}
 				<input {...getInputProps()} className="sr-only" />
 
-				{hasImage ? (
+				{previewUrl ? (
 					<>
-						{/* Cover Image Display */}
+						{/* Banner Image Display */}
 						<div className="relative aspect-29/7 w-full">
-							{/* Loading placeholder */}
-							{imageLoading && (
-								<div className="absolute inset-0 animate-pulse bg-muted flex items-center justify-center">
-									<div className="flex flex-col items-center gap-2 text-muted-foreground">
-										<ImageIcon className="size-5" />
-										<span className="text-sm">Loading image...</span>
-									</div>
-								</div>
-							)}
-
 							{/* Actual image */}
 							<img
-								src={bannerImage.preview}
-								alt="Cover"
-								className={cn(
-									'h-full w-full object-cover transition-opacity duration-300',
-									imageLoading ? 'opacity-0' : 'opacity-100'
-								)}
-								onLoad={() => setImageLoading(false)}
-								onError={() => setImageLoading(false)}
+								src={previewUrl}
+								alt="Banner"
+								className={cn('h-full w-full object-cover transition-opacity duration-300')}
 							/>
 
 							{/* Overlay on hover */}
@@ -148,46 +126,12 @@ export default function CoverUpload({
 									</Button>
 								</div>
 							</div>
-
-							{/* Upload progress */}
-							{isUploading && (
-								<div className="absolute inset-0 flex items-center justify-center bg-black/40">
-									<div className="relative">
-										<svg className="size-16 -rotate-90" viewBox="0 0 64 64">
-											<circle
-												cx="32"
-												cy="32"
-												r="28"
-												fill="none"
-												stroke="currentColor"
-												strokeWidth="4"
-												className="text-white/20"
-											/>
-											<circle
-												cx="32"
-												cy="32"
-												r="28"
-												fill="none"
-												stroke="currentColor"
-												strokeWidth="4"
-												strokeDasharray="175.929"
-												strokeDashoffset="0"
-												className="text-white transition-all duration-300 animate-spin"
-												strokeLinecap="round"
-											/>
-										</svg>
-										<div className="absolute inset-0 flex items-center justify-center">
-											<span className="text-sm font-medium text-white">Uploading...</span>
-										</div>
-									</div>
-								</div>
-							)}
 						</div>
 					</>
 				) : (
 					/* Empty State */
 					<div
-						className="flex aspect-21-7 w-full cursor-pointer flex-col items-center justify-center gap-4 p-8 text-center"
+						className="flex aspect-21/7 w-full cursor-pointer flex-col items-center justify-center gap-4 p-8 text-center"
 						onClick={openFileDialog}
 					>
 						<div className="rounded-full bg-primary/10 p-4">

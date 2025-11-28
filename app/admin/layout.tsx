@@ -4,6 +4,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import MainNav from './main-nav';
 import AdminSearch from '@/components/admin/admin-search';
+import { NextSSRPlugin } from '@uploadthing/react/next-ssr-plugin';
+import { extractRouterConfig } from 'uploadthing/server';
+import { ourFileRouter } from '../api/uploadthing/core';
 
 export default function AdminLayout({ children }: Readonly<{ children: React.ReactNode }>) {
 	return (
@@ -24,7 +27,10 @@ export default function AdminLayout({ children }: Readonly<{ children: React.Rea
 				</div>
 			</div>
 
-			<main className="flex-1 container mx-auto pt-6 p-8 space-y-4">{children}</main>
+			<main className="flex-1 container mx-auto pt-6 p-8 space-y-4">
+				<NextSSRPlugin routerConfig={extractRouterConfig(ourFileRouter)} />
+				{children}
+			</main>
 		</div>
 	);
 }
