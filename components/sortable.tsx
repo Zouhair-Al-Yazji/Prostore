@@ -15,6 +15,8 @@ import { Sortable, SortableItem, SortableItemHandle } from '@/components/ui/sort
 import { CircleX, CloudUpload, GripVertical, ImageIcon, TriangleAlert, XIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { formatBytes } from '@/hooks/use-file-upload';
+import { useUploadThing } from '@/lib/uploadthing';
 
 interface ImageFile {
 	id: string;
@@ -23,6 +25,7 @@ interface ImageFile {
 	progress: number;
 	status: 'uploading' | 'completed' | 'error';
 	error?: string;
+	url?: string;
 }
 
 type SortableImage = {
@@ -37,6 +40,8 @@ interface ImageUploadProps {
 	maxSize?: number;
 	accept?: string;
 	className?: string;
+	value?: string[];
+	onValueChange?: (imageUrls: string[]) => void;
 	onImagesChange?: (images: ImageFile[]) => void;
 	onUploadComplete?: (images: ImageFile[]) => void;
 }
@@ -46,6 +51,8 @@ export default function SortableImageUpload({
 	maxSize = 10 * 1024 * 1024, // 10MB as per UI reference
 	accept = 'image/*',
 	className,
+	value = [],
+	onValueChange,
 	onImagesChange,
 	onUploadComplete,
 }: ImageUploadProps) {
@@ -53,38 +60,71 @@ export default function SortableImageUpload({
 	const [isDragging, setIsDragging] = useState(false);
 	const [errors, setErrors] = useState<string[]>([]);
 	const [activeId, setActiveId] = useState<string | null>(null);
-	const [allImages, setAllImages] = useState<SortableImage[]>([
-		{
-			id: 'default-1',
-			src: 'https://picsum.photos/400/300?random=1',
-			alt: 'Product view 1',
-			type: 'default',
+	const [allImages, setAllImages] = useState<SortableImage[]>([]);
+
+	const onClientUploadComplete = useCallback(
+		(res: { name: string; size: number; key: string; ufsUrl: string }[] | undefined) => {
+			if (!res) {
+				return;
+			}
+			setImages(prevImages => {
+				const updatedImages = prevImages.map(imageFile => {
+					const uploadedFile = res.find(uploaded => uploaded.name === imageFile.file.name);
+					if (uploadedFile) {
+						return {
+							...imageFile,
+							status: 'completed' as const,
+							progress: 100,
+							url: uploadedFile.ufsUrl,
+						};
+					}
+					return imageFile;
+				});
+				return updatedImages;
+			});
+
+			setAllImages(prevAllImages =>
+				prevAllImages.map(sortableImg => {
+					const uploadedFile = res.find(r => r.name === sortableImg.alt);
+					if (uploadedFile) {
+						return {
+							...sortableImg,
+							src: uploadedFile.ufsUrl,
+						};
+					}
+					return sortableImg;
+				})
+			);
+
+			const completedImageUrls = res.map(file => file.ufsUrl);
+			if (completedImageUrls.length > 0 && onValueChange) {
+				onValueChange([...(value || []), ...completedImageUrls]);
+			}
+
+			// onUploadComplete?.(updatedImages); // updatedImages is not available here
+			toast.success('Upload completed successfully!');
 		},
-		{
-			id: 'default-2',
-			src: 'https://picsum.photos/400/300?random=2',
-			alt: 'Product view 2',
-			type: 'default',
-		},
-		{
-			id: 'default-3',
-			src: 'https://picsum.photos/400/300?random=3',
-			alt: 'Product view 3',
-			type: 'default',
-		},
-		{
-			id: 'default-4',
-			src: 'https://picsum.photos/400/300?random=4',
-			alt: 'Product view 4',
-			type: 'default',
-		},
-		{
-			id: 'default-5',
-			src: 'https://picsum.photos/400/300?random=5',
-			alt: 'Product view 5',
-			type: 'default',
-		},
-	]);
+		[onValueChange, value]
+	);
+
+	const onUploadError = useCallback((err: Error) => {
+		toast.error(`Upload failed: ${err.message}`);
+		setImages(prev =>
+			prev.map(img =>
+				img.status === 'uploading' ? { ...img, status: 'error', error: err.message } : img
+			)
+		);
+	}, []);
+
+	const onUploadProgress = useCallback((progress: number) => {
+		setImages(prev => prev.map(img => (img.status === 'uploading' ? { ...img, progress } : img)));
+	}, []);
+
+	const { isUploading, startUpload } = useUploadThing('imageUploader', {
+		onClientUploadComplete,
+		onUploadError,
+		onUploadProgress,
+	});
 
 	// Helper function to create SortableImage from ImageFile
 	const createSortableImage = useCallback(
@@ -97,11 +137,31 @@ export default function SortableImageUpload({
 		[]
 	);
 
-	// Ensure arrays never contain undefined items
+	// Sync allImages with the value prop
 	useEffect(() => {
-		setAllImages(prev => prev.filter(item => item && item.id));
-		setImages(prev => prev.filter(item => item && item.id));
-	}, []);
+		const existingImageUrls = allImages.map(img => img.src);
+		const newUrls = (value || []).filter(url => !existingImageUrls.includes(url));
+
+		if (newUrls.length > 0) {
+			const imagesToAdd: SortableImage[] = newUrls.map(url => ({
+				id: url, // Use URL as a stable ID
+				src: url,
+				alt: `Product image`,
+				type: 'default',
+			}));
+			setAllImages(prev => [...prev, ...imagesToAdd]);
+		}
+
+		// Remove images that are no longer in value
+		const urlsInValue = new Set(value || []);
+		const imagesToRemove = allImages.filter(
+			img => img.type === 'default' && !urlsInValue.has(img.src)
+		);
+
+		if (imagesToRemove.length > 0) {
+			setAllImages(prev => prev.filter(img => !imagesToRemove.some(rem => rem.id === img.id)));
+		}
+	}, [value, allImages]);
 
 	const validateFile = (file: File): string | null => {
 		if (!file.type.startsWith('image/')) {
@@ -110,98 +170,83 @@ export default function SortableImageUpload({
 		if (file.size > maxSize) {
 			return `File size must be less than ${(maxSize / 1024 / 1024).toFixed(1)}MB`;
 		}
-		if (images.length >= maxFiles) {
-			return `Maximum ${maxFiles} files allowed`;
-		}
 		return null;
 	};
 
 	const addImages = useCallback(
-		(files: FileList | File[]) => {
-			const newImages: ImageFile[] = [];
+		async (files: FileList | File[]) => {
+			const newImageFiles: ImageFile[] = [];
 			const newErrors: string[] = [];
 
-			Array.from(files).forEach(file => {
+			const currentTotal = images.length + value.length;
+			const availableSlots = maxFiles - currentTotal;
+
+			if (files.length > availableSlots) {
+				newErrors.push(
+					`You can only upload ${availableSlots > 0 ? availableSlots : 0} more image(s).`
+				);
+			}
+
+			const filesToProcess = Array.from(files).slice(0, availableSlots);
+
+			for (const file of filesToProcess) {
 				const error = validateFile(file);
 				if (error) {
 					newErrors.push(`${file.name}: ${error}`);
-					return;
+					continue;
 				}
-
-				const imageFile: ImageFile = {
-					id: `${Date.now()}-${Math.random()}`,
+				newImageFiles.push({
+					id: `${file.name}-${file.size}`, // More stable ID
 					file,
 					preview: URL.createObjectURL(file),
 					progress: 0,
 					status: 'uploading',
-				};
-
-				newImages.push(imageFile);
-			});
+				});
+			}
 
 			if (newErrors.length > 0) {
 				setErrors(prev => [...prev, ...newErrors]);
 			}
 
-			if (newImages.length > 0) {
-				const updatedImages = [...images, ...newImages];
-				setImages(updatedImages);
-				onImagesChange?.(updatedImages);
+			if (newImageFiles.length > 0) {
+				setImages(prev => [...prev, ...newImageFiles]);
+				setAllImages(prev => [...prev, ...newImageFiles.map(createSortableImage)]);
 
-				// Add new images to allImages for sorting
-				const newSortableImages = newImages.map(createSortableImage);
-				setAllImages(prev => [...prev, ...newSortableImages]);
-
-				// Simulate upload progress
-				newImages.forEach(imageFile => {
-					simulateUpload(imageFile);
-				});
+				const filesToUpload = newImageFiles.map(img => img.file);
+				await startUpload(filesToUpload);
 			}
 		},
-		[images, maxSize, maxFiles, onImagesChange, createSortableImage]
+		[
+			maxFiles,
+			maxSize,
+			value,
+			onImagesChange,
+			createSortableImage,
+			startUpload,
+			images.length, // Dependency on length is lighter than the whole array
+		]
 	);
-
-	const simulateUpload = (imageFile: ImageFile) => {
-		let progress = 0;
-		const interval = setInterval(() => {
-			progress += Math.random() * 20;
-			if (progress >= 100) {
-				progress = 100;
-				clearInterval(interval);
-
-				setImages(prev =>
-					prev.map(img =>
-						img.id === imageFile.id ? { ...img, progress: 100, status: 'completed' as const } : img
-					)
-				);
-
-				// Check if all uploads are complete
-				const updatedImages = images.map(img =>
-					img.id === imageFile.id ? { ...img, progress: 100, status: 'completed' as const } : img
-				);
-
-				if (updatedImages.every(img => img.status === 'completed')) {
-					onUploadComplete?.(updatedImages);
-				}
-			} else {
-				setImages(prev => prev.map(img => (img.id === imageFile.id ? { ...img, progress } : img)));
-			}
-		}, 100);
-	};
 
 	const removeImage = useCallback(
 		(id: string) => {
-			// Remove from allImages
+			const imageToRemove = allImages.find(img => img.id === id);
+			if (!imageToRemove) return;
+
+			// Remove from the main display list
 			setAllImages(prev => prev.filter(img => img.id !== id));
 
-			// If it's an uploaded image, also remove from images array and revoke URL
-			const uploadedImage = images.find(img => img.id === id);
-			if (uploadedImage) {
-				URL.revokeObjectURL(uploadedImage.preview);
+			if (imageToRemove.type === 'uploaded') {
+				// If it's a file being uploaded or a completed upload from this session
 				setImages(prev => prev.filter(img => img.id !== id));
+				URL.revokeObjectURL(imageToRemove.src); // Revoke blob URL
+			}
+
+			// If it was a completed upload (from this session or initial value), remove from form value
+			if (onValueChange) {
+				onValueChange(value.filter(url => url !== imageToRemove.src));
 			}
 		},
-		[images]
+		[allImages, value, onValueChange]
 	);
 
 	const handleDragEnter = useCallback((e: React.DragEvent) => {
@@ -249,16 +294,34 @@ export default function SortableImageUpload({
 		input.click();
 	}, [accept, addImages]);
 
-	const formatBytes = (bytes: number): string => {
-		if (bytes === 0) return '0 Bytes';
-		const k = 1024;
-		const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-		const i = Math.floor(Math.log(bytes) / Math.log(k));
-		return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-	};
+	// Handle reordering and update form value
+	const handleReorder = useCallback(
+		(newItemIds: string[]) => {
+			const imageMap = new Map(allImages.map(img => [img.id, img]));
+			const newAllImages = newItemIds
+				.map(id => imageMap.get(id))
+				.filter((item): item is SortableImage => !!item);
+
+			setAllImages(newAllImages);
+
+			const orderedUrls = newAllImages
+				.map(item => item.src)
+				.filter(url => !url.startsWith('blob:')); // Exclude URLs of images that are still uploading
+
+			if (onValueChange) {
+				onValueChange(orderedUrls);
+			}
+
+			toast.success('Images reordered successfully!');
+		},
+		[allImages, onValueChange]
+	);
+
+	const totalUploadedImages = images.filter(img => img.status === 'completed').length;
+	const totalExistingImages = value?.length || 0;
 
 	return (
-		<div className={cn('w-full max-w-4xl', className)}>
+		<div className={cn('w-full mx-auto max-w-4xl', className)}>
 			{/* Instructions */}
 			<div className="mb-4 text-center">
 				<p className="text-sm text-muted-foreground">
@@ -274,30 +337,7 @@ export default function SortableImageUpload({
 				{/* Combined Images Sortable */}
 				<Sortable
 					value={allImages.map(item => item.id)}
-					onValueChange={newItemIds => {
-						// Reconstruct the allImages array based on the new order
-						const newAllImages = newItemIds
-							.map(itemId => {
-								// First try to find in allImages (default images)
-								const existingImage = allImages.find(img => img.id === itemId);
-								if (existingImage) return existingImage;
-
-								// If not found, it's a newly uploaded image
-								const uploadedImage = images.find(img => img.id === itemId);
-								if (uploadedImage) {
-									return createSortableImage(uploadedImage);
-								}
-								return null;
-							})
-							.filter((item): item is SortableImage => item !== null);
-
-						setAllImages(newAllImages);
-
-						toast.success('Images reordered successfully!', {
-							description: `Images rearranged across both sections`,
-							duration: 3000,
-						});
-					}}
+					onValueChange={handleReorder}
 					getItemValue={item => item}
 					strategy="grid"
 					className="grid grid-cols-5 gap-2.5 auto-rows-fr"
@@ -323,6 +363,7 @@ export default function SortableImageUpload({
 								{/* Remove Button Overlay */}
 								<Button
 									onClick={() => removeImage(item.id)}
+									type="button"
 									variant="outline"
 									size="icon"
 									className="shadow-sm absolute top-2 end-2 size-6 opacity-0 group-hover:opacity-100 rounded-full"
@@ -358,8 +399,13 @@ export default function SortableImageUpload({
 					<span className="text-xs text-secondary-foreground font-normal block mb-3">
 						JPEG, PNG, up to {formatBytes(maxSize)}.
 					</span>
-					<Button size="sm" onClick={openFileDialog}>
-						Browse File
+					<Button
+						size="sm"
+						onClick={openFileDialog}
+						disabled={isUploading || totalUploadedImages + totalExistingImages >= maxFiles}
+						type="button"
+					>
+						{isUploading ? 'Uploading...' : 'Browse File'}
 					</Button>
 				</CardContent>
 			</Card>
@@ -384,12 +430,19 @@ export default function SortableImageUpload({
 											</span>
 											{imageFile.status === 'uploading' && (
 												<p className="text-xs text-muted-foreground">
-													Uploading... {Math.round(imageFile.progress)}%
+													Uploading... {imageFile.progress}%
 												</p>
+											)}
+											{imageFile.status === 'completed' && (
+												<p className="text-xs text-green-600 font-medium">✓ Uploaded</p>
+											)}
+											{imageFile.status === 'error' && (
+												<p className="text-xs text-red-600 font-medium">✗ Failed</p>
 											)}
 										</div>
 										<Button
 											onClick={() => removeImage(imageFile.id)}
+											type="button"
 											variant="ghost"
 											size="icon"
 											className="size-6"
@@ -402,7 +455,9 @@ export default function SortableImageUpload({
 										value={imageFile.progress}
 										className={cn(
 											'h-1 transition-all duration-300',
-											'[&>div]:bg-zinc-950 dark:[&>div]:bg-zinc-50'
+											imageFile.status === 'completed' && '[&>div]:bg-green-600',
+											imageFile.status === 'error' && '[&>div]:bg-red-600',
+											imageFile.status === 'uploading' && '[&>div]:bg-blue-600'
 										)}
 									/>
 								</div>

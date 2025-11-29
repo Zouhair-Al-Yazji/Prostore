@@ -2,7 +2,7 @@
 
 import { createProduct, updateProduct } from '@/lib/actions/product.actions';
 import { productDefaultValues } from '@/lib/constants';
-import { UploadButton, useUploadThing } from '@/lib/uploadthing';
+import { useUploadThing } from '@/lib/uploadthing';
 import { insertProductSchema, updateProductSchema } from '@/lib/validators';
 import { Product } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -271,36 +271,22 @@ export default function ProductForm({
 				<Controller
 					name="images"
 					control={control}
-					render={({ fieldState }) => (
+					render={({ field, fieldState }) => (
 						<Field data-invalid={fieldState.invalid}>
 							<FieldLabel data-invalid={fieldState.invalid} htmlFor="images">
-								Images
+								Product Images
 							</FieldLabel>
 							<Card>
 								<CardContent className="space-y-2 mt-2">
 									<div className="flex-start space-x-2">
-										{images.map((image: string) => (
-											<Image
-												key={image}
-												src={image}
-												width={100}
-												height={100}
-												className="w-20 h-20 object-cover object-center rounded-sm"
-												alt="product image"
-											/>
-										))}
-
-										<UploadButton
-											endpoint="imageUploader"
-											onUploadError={error => {
-												toast.error(error.message);
-											}}
-											onClientUploadComplete={(res: { ufsUrl: string }[]) => {
-												setValue('images', [...images, res[0].ufsUrl]);
+										{/* Sortable Image Upload Component */}
+										<SortableImageUpload
+											value={field.value || []}
+											onValueChange={field.onChange}
+											onUploadComplete={uploadedImages => {
+												console.log('All uploads completed:', uploadedImages);
 											}}
 										/>
-
-										<SortableImageUpload />
 									</div>
 								</CardContent>
 							</Card>
