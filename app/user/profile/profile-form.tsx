@@ -1,6 +1,6 @@
 'use client';
 
-import AvatarUpload from '@/components/avatar-upload';
+import AvatarUpload from '@/components/admin/avatar-upload';
 import { Button } from '@/components/ui/button';
 import {
 	Card,

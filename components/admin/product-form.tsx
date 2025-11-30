@@ -1,29 +1,28 @@
 'use client';
 
+import { FileWithPreview } from '@/hooks/use-file-upload';
 import { createProduct, updateProduct } from '@/lib/actions/product.actions';
 import { productDefaultValues } from '@/lib/constants';
 import { useUploadThing } from '@/lib/uploadthing';
 import { insertProductSchema, updateProductSchema } from '@/lib/validators';
 import { Product } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import slugify from 'slugify';
 import { toast } from 'sonner';
 import z from 'zod';
-import BannerUpload from '../banner-upload';
-import SortableImageUpload from '../sortable';
+import SortableImageUpload from './sortable';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import { Checkbox } from '../ui/checkbox';
 import { Field, FieldError, FieldGroup, FieldLabel, FieldSet } from '../ui/field';
 import { Input } from '../ui/input';
+import { Progress } from '../ui/progress';
 import { Spinner } from '../ui/spinner';
 import { Textarea } from '../ui/textarea';
-import { FileWithPreview } from '@/hooks/use-file-upload';
-import { Progress } from '../ui/progress';
+import BannerUpload from './banner-upload';
 
 export default function ProductForm({
 	type,
