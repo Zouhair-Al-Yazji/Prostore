@@ -41,7 +41,7 @@ export default function ReviewList({
 			{reviews.length === 0 && <div>No reviews yet</div>}
 
 			{userId ? (
-				<ReviewForm userId={userId} productId={productId} onReviewSubmitted={reload} />
+				<ReviewForm userId={userId} productId={productId} onReviewSubmittedAction={reload} />
 			) : (
 				<div>
 					Please

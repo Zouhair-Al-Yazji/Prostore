@@ -1,6 +1,6 @@
 'use client';
 
-import AvatarUpload from '@/components/avatar-upload';
+import AvatarUpload from '@/components/admin/avatar-upload';
 import { Button } from '@/components/ui/button';
 import {
 	Card,
@@ -27,7 +27,7 @@ import z from 'zod';
 
 export default function ProfileForm() {
 	const { data: session, update } = useSession();
-	const [file, setFile] = useState<FileWithPreview | null>();
+	const [avatar, setAvatar] = useState<FileWithPreview | null>();
 	const router = useRouter();
 
 	const {
@@ -56,8 +56,8 @@ export default function ProfileForm() {
 	async function onSubmit(data: z.infer<typeof updateProfileSchema>) {
 		let image = data.image;
 
-		if (file) {
-			const res = await startUpload([file.file as File]);
+		if (avatar) {
+			const res = await startUpload([avatar.file as File]);
 			if (!res) {
 				toast.error('Error uploading file');
 				return;
@@ -143,7 +143,7 @@ export default function ProfileForm() {
 						/>
 						<Field>
 							<FieldLabel>Avatar</FieldLabel>
-							<AvatarUpload defaultAvatar={image} onFileChange={setFile} />
+							<AvatarUpload defaultAvatar={image} onAvatarChange={setAvatar} />
 							<input type="hidden" {...register('image')} />
 						</Field>
 					</FieldGroup>

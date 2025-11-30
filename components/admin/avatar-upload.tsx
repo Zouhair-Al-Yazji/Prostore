@@ -16,14 +16,14 @@ import { useEffect, useRef } from 'react';
 interface AvatarUploadProps {
 	maxSize?: number;
 	className?: string;
-	onFileChange?: (file: FileWithPreview | null) => void;
+	onAvatarChange?: (avatar: FileWithPreview | null) => void;
 	defaultAvatar?: string;
 }
 
 export default function AvatarUpload({
 	maxSize = 2 * 1024 * 1024, // 2MB
 	className,
-	onFileChange,
+	onAvatarChange,
 	defaultAvatar,
 }: AvatarUploadProps) {
 	const [
@@ -50,8 +50,8 @@ export default function AvatarUpload({
 	const prevDefaultAvatarRef = useRef(defaultAvatar);
 
 	useEffect(() => {
-		onFileChange?.(currentFile || null);
-	}, [currentFile, onFileChange]);
+		onAvatarChange?.(currentFile || null);
+	}, [currentFile, onAvatarChange]);
 
 	// Effect to clear the internal file state only when the defaultAvatar has actually changed.
 	useEffect(() => {

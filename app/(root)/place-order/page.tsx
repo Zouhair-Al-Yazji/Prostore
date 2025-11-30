@@ -1,5 +1,5 @@
 import { auth } from '@/auth';
-import CheckoutSteps from '@/components/shared/checkout-steps';
+import TitleStatus from '@/components/shared/title-status';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import {
@@ -43,7 +43,7 @@ export default async function PlaceOrderPage() {
 
 	return (
 		<>
-			<CheckoutSteps current={3} />
+			<TitleStatus current={4} />
 			<h1 className="py-4 text-2xl">Place Order</h1>
 			<div className="grid md:grid-cols-3 gap-5">
 				<div className="md:col-span-2 space-y-4">

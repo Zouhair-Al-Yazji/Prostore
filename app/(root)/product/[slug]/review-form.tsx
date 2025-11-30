@@ -35,11 +35,11 @@ import z from 'zod';
 export default function ReviewForm({
 	userId,
 	productId,
-	onReviewSubmitted,
+	onReviewSubmittedAction,
 }: {
 	userId: string;
 	productId: string;
-	onReviewSubmitted?: () => void;
+	onReviewSubmittedAction?: () => void;
 }) {
 	const {
 		control,
@@ -75,7 +75,7 @@ export default function ReviewForm({
 			return toast.error(res.message);
 		}
 
-		if (onReviewSubmitted) onReviewSubmitted();
+		if (onReviewSubmittedAction) onReviewSubmittedAction();
 
 		toast(res.message);
 
