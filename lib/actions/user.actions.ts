@@ -216,7 +216,7 @@ export async function deleteUserById(userId: string) {
 		});
 
 		revalidatePath('/admin/users');
-		return { success: true, message: `${formatId} user deleted successfully` };
+		return { success: true, message: `${formatId(userId)} user deleted successfully` };
 	} catch (error) {
 		return { success: false, message: formatError(error) };
 	}

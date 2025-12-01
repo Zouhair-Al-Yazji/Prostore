@@ -30,11 +30,10 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { Slot } from '@radix-ui/react-slot';
 
-// Define a proper type for the context instead of using 'any'
-interface KanbanContextProps<T = unknown> {
-	columns: Record<string, T[]>;
-	setColumns: (columns: Record<string, T[]>) => void;
-	getItemId: (item: T) => string;
+interface KanbanContextProps {
+	columns: Record<string, unknown[]>;
+	setColumns: (columns: Record<string, unknown[]>) => void;
+	getItemId: (item: unknown) => string;
 	columnIds: string[];
 	activeId: UniqueIdentifier | null;
 	setActiveId: (id: UniqueIdentifier | null) => void;
@@ -42,16 +41,15 @@ interface KanbanContextProps<T = unknown> {
 	isColumn: (id: UniqueIdentifier) => boolean;
 }
 
-// Create a generic context with proper typing
-const KanbanContext = React.createContext<KanbanContextProps<any> | undefined>(undefined);
+const KanbanContext = React.createContext<KanbanContextProps | undefined>(undefined);
 
 // Helper hook to use the Kanban context with proper typing
-function useKanbanContext<T = unknown>() {
+function useKanbanContext() {
 	const context = React.useContext(KanbanContext);
 	if (!context) {
 		throw new Error('useKanbanContext must be used within a Kanban provider');
 	}
-	return context as KanbanContextProps<T>;
+	return context as KanbanContextProps;
 }
 
 const ColumnContext = React.createContext<{
@@ -258,10 +256,10 @@ function Kanban<T>({
 	);
 
 	const contextValue = React.useMemo(
-		(): KanbanContextProps<T> => ({
-			columns,
-			setColumns,
-			getItemId: getItemValue,
+		(): KanbanContextProps => ({
+			columns: columns as Record<string, unknown[]>,
+			setColumns: setColumns as (columns: Record<string, unknown[]>) => void,
+			getItemId: getItemValue as (item: unknown) => string,
 			columnIds,
 			activeId,
 			setActiveId,
@@ -477,7 +475,10 @@ export interface KanbanColumnContentProps {
 function KanbanColumnContent({ value, className, children }: KanbanColumnContentProps) {
 	const { columns, getItemId } = useKanbanContext();
 
-	const itemIds = React.useMemo(() => columns[value].map(getItemId), [columns, getItemId, value]);
+	const itemIds = React.useMemo(
+		() => (columns[value] ? columns[value].map(getItemId) : []),
+		[columns, getItemId, value]
+	);
 
 	return (
 		<SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
@@ -513,7 +514,7 @@ function KanbanOverlay({ children, className }: KanbanOverlayProps) {
 		} else {
 			setDimensions(null);
 		}
-	}, [activeId, isColumn]); // Fixed: Added isColumn to dependency array
+	}, [activeId, isColumn]);
 
 	const style = {
 		width: dimensions?.width,
