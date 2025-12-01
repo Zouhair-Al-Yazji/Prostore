@@ -1,20 +1,17 @@
 'use client';
 
-import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
 	Stepper,
-	StepperContent,
 	StepperIndicator,
 	StepperItem,
 	StepperNav,
-	StepperPanel,
 	StepperSeparator,
 	StepperTitle,
 	StepperTrigger,
 } from '@/components/ui/stepper';
 import { BookUser, Check, CreditCard, ListTodo, LoaderCircleIcon, LockKeyhole } from 'lucide-react';
+import { useState } from 'react';
 
 const steps = [
 	{ title: 'User Login', icon: LockKeyhole },

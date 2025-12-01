@@ -60,7 +60,6 @@ export default function ProductForm({
 		setValue,
 		getValues,
 		watch,
-		register,
 		formState: { isSubmitting },
 	} = useForm<z.infer<typeof schema>>({
 		resolver: zodResolver(schema),
@@ -103,7 +102,6 @@ export default function ProductForm({
 		setBanner(null);
 	}, [setValue]);
 
-	const images = watch('images');
 	const isFeatured = watch('isFeatured');
 	const watchedBanner = watch('banner');
 
