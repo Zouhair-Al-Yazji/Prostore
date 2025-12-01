@@ -30,7 +30,8 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { Slot } from '@radix-ui/react-slot';
 
-interface KanbanContextProps<T> {
+// Define a proper type for the context instead of using 'any'
+interface KanbanContextProps<T = unknown> {
 	columns: Record<string, T[]>;
 	setColumns: (columns: Record<string, T[]>) => void;
 	getItemId: (item: T) => string;
@@ -41,17 +42,17 @@ interface KanbanContextProps<T> {
 	isColumn: (id: UniqueIdentifier) => boolean;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const KanbanContext = React.createContext<KanbanContextProps<any>>({
-	columns: {},
-	setColumns: () => {},
-	getItemId: () => '',
-	columnIds: [],
-	activeId: null,
-	setActiveId: () => {},
-	findContainer: () => undefined,
-	isColumn: () => false,
-});
+// Create a generic context with proper typing
+const KanbanContext = React.createContext<KanbanContextProps<any> | undefined>(undefined);
+
+// Helper hook to use the Kanban context with proper typing
+function useKanbanContext<T = unknown>() {
+	const context = React.useContext(KanbanContext);
+	if (!context) {
+		throw new Error('useKanbanContext must be used within a Kanban provider');
+	}
+	return context as KanbanContextProps<T>;
+}
 
 const ColumnContext = React.createContext<{
 	attributes: DraggableAttributes;
@@ -257,7 +258,7 @@ function Kanban<T>({
 	);
 
 	const contextValue = React.useMemo(
-		() => ({
+		(): KanbanContextProps<T> => ({
 			columns,
 			setColumns,
 			getItemId: getItemValue,
@@ -292,7 +293,7 @@ export interface KanbanBoardProps {
 }
 
 function KanbanBoard({ children, className }: KanbanBoardProps) {
-	const { columnIds } = React.useContext(KanbanContext);
+	const { columnIds } = useKanbanContext();
 
 	return (
 		<SortableContext items={columnIds} strategy={rectSortingStrategy}>
@@ -326,7 +327,7 @@ function KanbanColumn({ value, className, children, disabled }: KanbanColumnProp
 		disabled,
 	});
 
-	const { activeId, isColumn } = React.useContext(KanbanContext);
+	const { activeId, isColumn } = useKanbanContext();
 	const isColumnDragging = activeId ? isColumn(activeId) : false;
 
 	const style = {
@@ -414,7 +415,7 @@ function KanbanItem({ value, asChild = false, className, children, disabled }: K
 		disabled,
 	});
 
-	const { activeId, isColumn } = React.useContext(KanbanContext);
+	const { activeId, isColumn } = useKanbanContext();
 	const isItemDragging = activeId ? !isColumn(activeId) : false;
 
 	const style = {
@@ -474,7 +475,7 @@ export interface KanbanColumnContentProps {
 }
 
 function KanbanColumnContent({ value, className, children }: KanbanColumnContentProps) {
-	const { columns, getItemId } = React.useContext(KanbanContext);
+	const { columns, getItemId } = useKanbanContext();
 
 	const itemIds = React.useMemo(() => columns[value].map(getItemId), [columns, getItemId, value]);
 
@@ -495,7 +496,7 @@ export interface KanbanOverlayProps {
 }
 
 function KanbanOverlay({ children, className }: KanbanOverlayProps) {
-	const { activeId, isColumn } = React.useContext(KanbanContext);
+	const { activeId, isColumn } = useKanbanContext();
 	const [dimensions, setDimensions] = React.useState<{ width: number; height: number } | null>(
 		null
 	);
@@ -512,7 +513,7 @@ function KanbanOverlay({ children, className }: KanbanOverlayProps) {
 		} else {
 			setDimensions(null);
 		}
-	}, [activeId]);
+	}, [activeId, isColumn]); // Fixed: Added isColumn to dependency array
 
 	const style = {
 		width: dimensions?.width,
@@ -555,7 +556,14 @@ const SortableItemContext = React.createContext<{
 	disabled: false,
 });
 
-// Multipurpose Sortable Component
+// Type for child props in Sortable component
+interface SortableChildProps {
+	value: string;
+	className?: string;
+	children?: React.ReactNode;
+	disabled?: boolean;
+}
+
 export interface SortableRootProps<T> {
 	value: T[];
 	onValueChange: (value: T[]) => void;
@@ -650,10 +658,13 @@ function Sortable<T>({
 				{activeId ? (
 					<div className="z-50">
 						{React.Children.map(children, child => {
-							if (React.isValidElement(child) && (child.props as any).value === activeId) {
-								return React.cloneElement(child as React.ReactElement<any>, {
-									...(child.props as any),
-									className: cn((child.props as any).className, 'z-50 shadow-lg'),
+							if (
+								React.isValidElement<SortableChildProps>(child) &&
+								child.props.value === activeId
+							) {
+								return React.cloneElement(child, {
+									...child.props,
+									className: cn(child.props.className, 'z-50 shadow-lg'),
 								});
 							}
 							return null;
@@ -756,7 +767,6 @@ export {
 	KanbanItemHandle,
 	KanbanColumnContent,
 	KanbanOverlay,
-	// New multipurpose sortable components
 	Sortable,
 	SortableItem,
 	SortableItemHandle,

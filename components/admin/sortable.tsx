@@ -1,6 +1,5 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
 import {
 	Alert,
 	AlertContent,
@@ -12,11 +11,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Sortable, SortableItem, SortableItemHandle } from '@/components/ui/sortable';
-import { CircleX, CloudUpload, GripVertical, ImageIcon, TriangleAlert, XIcon } from 'lucide-react';
-import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 import { formatBytes } from '@/hooks/use-file-upload';
 import { useUploadThing } from '@/lib/uploadthing';
+import { cn } from '@/lib/utils';
+import { CircleX, CloudUpload, GripVertical, ImageIcon, TriangleAlert, XIcon } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 interface ImageFile {
 	id: string;
