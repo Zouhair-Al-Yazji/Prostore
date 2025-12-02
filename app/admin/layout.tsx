@@ -7,6 +7,7 @@ import AdminSearch from '@/components/admin/admin-search';
 import { NextSSRPlugin } from '@uploadthing/react/next-ssr-plugin';
 import { extractRouterConfig } from 'uploadthing/server';
 import { ourFileRouter } from '../api/uploadthing/core';
+import { SessionProvider } from 'next-auth/react';
 
 export default function AdminLayout({ children }: Readonly<{ children: React.ReactNode }>) {
 	return (
