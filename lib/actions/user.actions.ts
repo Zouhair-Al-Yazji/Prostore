@@ -48,7 +48,7 @@ export async function SignInWithGithub() {
 
 // Sign user out
 export async function SignOutUser() {
-	await signOut();
+	await signOut({ redirectTo: '/' });
 }
 
 // Sign up user

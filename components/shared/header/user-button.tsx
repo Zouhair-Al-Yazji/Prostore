@@ -1,4 +1,5 @@
-import { auth } from '@/auth';
+'use client';
+
 import { Button } from '@/components/ui/button';
 import {
 	DropdownMenu,
@@ -12,11 +13,20 @@ import { SignOutUser } from '@/lib/actions/user.actions';
 import { UserIcon, History, LogOut, Shield } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useSession } from 'next-auth/react';
+import { Spinner } from '@/components/ui/spinner';
 
-export default async function UserButton() {
-	const session = await auth();
+export default function UserButton() {
+	const { data: session, status } = useSession();
 
-	if (!session)
+	if (status === 'loading')
+		return (
+			<div className="flex items-center justify-center h-full">
+				<Spinner />
+			</div>
+		);
+
+	if (!session?.user)
 		return (
 			<Button asChild>
 				<Link href="/sign-in">
@@ -106,14 +116,13 @@ export default async function UserButton() {
 					)}
 
 					<DropdownMenuItem className="p-0 mb-1">
-						<form action={SignOutUser} className="w-full">
-							<Button
-								className="w-full flex items-center gap-2 justify-start py-4 h-4"
-								variant="ghost"
-							>
-								<LogOut /> <span>Sign Out</span>
-							</Button>
-						</form>
+						<Button
+							onClick={SignOutUser}
+							className="w-full flex items-center gap-2 justify-start py-4 h-4"
+							variant="ghost"
+						>
+							<LogOut /> <span>Sign Out</span>
+						</Button>
 					</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>
